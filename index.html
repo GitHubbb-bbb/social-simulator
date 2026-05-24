@@ -1,0 +1,3481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>社交预演系统</title>
+<style>
+  :root {
+    --bg: #FAF9F6;
+    --bg2: #F3F1EC;
+    --bg3: #ECEAE3;
+    --card: #FFFFFF;
+    --border: #E0DDD5;
+    --border2: #CCC9BF;
+    --text: #2A2825;
+    --text2: #6B6860;
+    --text3: #9B9890;
+    --accent: #5B7FA6;
+    --accent-bg: #EBF1F8;
+    --teal: #1D9E75;
+    --teal-bg: #E1F5EE;
+    --amber: #BA7517;
+    --amber-bg: #FAEEDA;
+    --coral: #C4503A;
+    --coral-bg: #FAECE7;
+    --purple: #6B5DC4;
+    --purple-bg: #EEEDFE;
+    --gray-node: #F3F1EC;
+    --gray-node-border: #CCC9BF;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --font: 'Georgia', 'Noto Serif SC', serif;
+    --font-ui: system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex; align-items: center; gap: 0;
+    height: 52px;
+  }
+  .nav-brand {
+    font-family: var(--font);
+    font-size: 15px;
+    color: var(--text);
+    margin-right: 32px;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+  }
+  .nav-brand span { color: var(--text3); font-size: 12px; margin-left: 6px; }
+  .nav-tabs { display: flex; gap: 2px; }
+  .nav-tab {
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text2);
+    border: none; background: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .nav-tab:hover { background: var(--bg2); color: var(--text); }
+  .nav-tab.active { background: var(--bg2); color: var(--text); font-weight: 500; }
+
+  /* ── LAYOUT ── */
+  .page { display: none; padding: 24px; max-width: 1300px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* ── SCENE LIBRARY ── */
+  .library-layout { display: grid; grid-template-columns: 220px 1fr; gap: 20px; }
+
+  .filter-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    height: fit-content;
+    position: sticky; top: 72px;
+  }
+  .filter-section { margin-bottom: 20px; }
+  .filter-section:last-child { margin-bottom: 0; }
+  .filter-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.07em;
+    color: var(--text3); text-transform: uppercase;
+    margin-bottom: 8px; display: block;
+  }
+  .filter-btn {
+    display: block; width: 100%;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    border: none; background: none;
+    text-align: left; cursor: pointer;
+    font-size: 13px; color: var(--text2);
+    transition: all 0.12s;
+    margin-bottom: 2px;
+  }
+  .filter-btn:hover { background: var(--bg2); color: var(--text); }
+  .filter-btn.active { background: var(--accent-bg); color: var(--accent); font-weight: 500; }
+  .filter-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    font-size: 12px; color: var(--text2);
+    cursor: pointer;
+    transition: all 0.12s;
+    margin: 2px;
+  }
+  .filter-tag:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-tag.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+
+  .scene-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    align-content: start;
+  }
+  .scene-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .scene-card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+  .scene-card.axis-0::before { background: var(--teal); }
+  .scene-card.axis-1::before { background: var(--purple); }
+  .scene-card.axis-2::before { background: var(--accent); }
+  .scene-card.axis-3::before { background: var(--coral); }
+  .scene-card:hover { border-color: var(--border2); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .scene-card-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+  .scene-card-desc { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 10px; }
+  .scene-card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px; font-weight: 500;
+  }
+  .tag-axis { background: var(--bg2); color: var(--text2); }
+  .tag-purpose-0 { background: var(--teal-bg); color: var(--teal); }
+  .tag-purpose-1 { background: var(--accent-bg); color: var(--accent); }
+  .tag-purpose-2 { background: var(--amber-bg); color: var(--amber); }
+  .tag-purpose-3 { background: var(--purple-bg); color: var(--purple); }
+  .tag-energy-low  { background: var(--teal-bg); color: var(--teal); }
+  .tag-energy-mid  { background: var(--amber-bg); color: var(--amber); }
+  .tag-energy-high { background: var(--coral-bg); color: var(--coral); }
+
+  /* ── SIMULATOR PAGE ── */
+  .sim-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px;
+  }
+  .back-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--card); cursor: pointer;
+    font-size: 13px; color: var(--text2);
+    transition: all 0.12s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .back-btn:hover { background: var(--bg2); }
+  .sim-title { font-size: 18px; font-weight: 500; color: var(--text); }
+  .sim-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+
+  .energy-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .energy-bar-label { font-size: 12px; color: var(--text2); white-space: nowrap; }
+  .energy-btns { display: flex; gap: 6px; }
+  .energy-btn {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: none; cursor: pointer;
+    font-size: 12px; color: var(--text2);
+    transition: all 0.12s;
+  }
+  .energy-btn:hover { border-color: var(--border2); }
+  .energy-btn.e-high.active  { background: var(--teal-bg); border-color: var(--teal); color: var(--teal); }
+  .energy-btn.e-mid.active   { background: var(--amber-bg); border-color: var(--amber); color: var(--amber); }
+  .energy-btn.e-low.active   { background: var(--coral-bg); border-color: var(--coral); color: var(--coral); }
+  .energy-hint { font-size: 12px; color: var(--text3); margin-left: auto; }
+
+  /* ── TREE ── */
+  .tree-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+  }
+  .tree-root { display: flex; flex-direction: column; align-items: center; }
+
+  .tree-node-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    position: relative;
+  }
+
+  .tree-node {
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    min-width: 200px; max-width: 280px;
+    text-align: center;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.15s;
+    box-shadow: var(--shadow);
+    position: relative;
+    user-select: none;
+  }
+  .tree-node:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+  /* node types */
+  .node-trigger {
+    background: var(--bg2);
+    border-color: var(--border2);
+    color: var(--text);
+  }
+  .node-nonverbal {
+    background: #EEF3F0;
+    border-color: #7DB89A;
+    color: #2D6B52;
+  }
+  .node-response {
+    background: var(--purple-bg);
+    border-color: #AFA9EC;
+    color: var(--purple);
+  }
+  .node-response.verified {
+    background: var(--teal-bg);
+    border-color: #5DCAA5;
+    color: var(--teal);
+  }
+  .node-end {
+    background: var(--teal-bg);
+    border-color: #5DCAA5;
+    color: var(--teal);
+  }
+  .node-unclear {
+    background: var(--amber-bg);
+    border-color: #EF9F27;
+    color: var(--amber);
+  }
+  .node-dimmed { opacity: 0.4; }
+
+  .node-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+    text-transform: uppercase; margin-bottom: 4px; opacity: 0.7;
+  }
+  .node-text { font-size: 13px; line-height: 1.5; }
+  .node-sub { font-size: 11px; margin-top: 4px; opacity: 0.7; line-height: 1.4; }
+  .node-energy {
+    position: absolute; top: -8px; right: -8px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    font-size: 10px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--card);
+  }
+  .ne-low  { background: var(--teal-bg);  color: var(--teal); }
+  .ne-mid  { background: var(--amber-bg); color: var(--amber); }
+  .ne-high { background: var(--coral-bg); color: var(--coral); }
+
+  /* connector lines */
+  .tree-connector {
+    width: 1px; height: 24px;
+    background: var(--border2);
+    margin: 0 auto;
+  }
+  .tree-connector-h {
+    height: 1px;
+    background: var(--border2);
+    align-self: flex-start;
+    margin-top: 12px;
+  }
+
+  .tree-children {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    position: relative;
+  }
+  .tree-children::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: var(--border2);
+  }
+  .tree-child-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    position: relative;
+  }
+  .tree-child-wrap::before {
+    content: '';
+    width: 1px; height: 24px;
+    background: var(--border2);
+    display: block;
+  }
+
+ /* collapsed indicator */
+  .node-collapsed-hint {
+    font-size: 11px; color: var(--text3);
+    margin-top: 4px;
+    cursor: pointer;
+  }
+  .node-collapse-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px;
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    background: none; cursor: pointer;
+    font-size: 11px; color: var(--text3);
+    margin-top: 6px;
+    transition: all 0.12s;
+  }
+  .node-collapse-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* variant panel */
+  .variant-panel {
+    background: var(--purple-bg);
+    border: 1px solid #AFA9EC;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-top: 10px;
+    min-width: 220px; max-width: 300px;
+    display: none;
+  }
+  .variant-panel.open { display: block; }
+  .variant-panel-title {
+    font-size: 11px; font-weight: 600; color: var(--purple);
+    letter-spacing: 0.05em; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .variant-item {
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 13px; color: var(--text);
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.12s;
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+  .variant-item:hover { background: var(--card); border-color: #AFA9EC; }
+  .variant-item.active { background: var(--card); border-color: var(--purple); color: var(--purple); font-weight: 500; }
+  .variant-add {
+    display: flex; gap: 6px; margin-top: 8px;
+  }
+  .variant-input {
+    flex: 1; padding: 5px 8px;
+    border: 1px solid #AFA9EC;
+    border-radius: var(--radius-sm);
+    background: var(--card);
+    font-size: 12px; color: var(--text);
+    font-family: var(--font-ui);
+  }
+  .variant-input:focus { outline: none; border-color: var(--purple); }
+  .variant-save-btn {
+    padding: 5px 10px;
+    border: none; border-radius: var(--radius-sm);
+    background: var(--purple); color: white;
+    font-size: 12px; cursor: pointer;
+    white-space: nowrap;
+  }
+  .variant-save-btn:hover { opacity: 0.85; }
+
+  /* unclear panel */
+  .unclear-panel {
+    background: var(--amber-bg);
+    border: 1px solid #EF9F27;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-top: 12px;
+    max-width: 400px;
+    display: none;
+  }
+  .unclear-panel.open { display: block; }
+  .unclear-panel-title {
+    font-size: 12px; font-weight: 600; color: var(--amber);
+    margin-bottom: 10px; letter-spacing: 0.04em;
+  }
+  .clarify-item {
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    font-size: 13px; color: var(--text);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .clarify-item:hover { border-color: var(--amber); background: #FFFBF3; }
+  .clarify-item:last-child { margin-bottom: 0; }
+
+  /* ── BOTTOM LOG ── */
+  .sim-log-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-top: 16px;
+  }
+  .log-section-title {
+    font-size: 13px; font-weight: 500; color: var(--text2);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .log-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-label { font-size: 11px; color: var(--text3); font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
+  .form-select, .form-input {
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    font-size: 13px; color: var(--text);
+    font-family: var(--font-ui);
+    transition: border-color 0.12s;
+  }
+  .form-select:focus, .form-input:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .log-submit {
+    padding: 7px 16px;
+    background: var(--accent);
+    color: white;
+    border: none; border-radius: var(--radius-sm);
+    font-size: 13px; cursor: pointer;
+    transition: opacity 0.12s;
+    white-space: nowrap;
+  }
+  .log-submit:hover { opacity: 0.88; }
+
+  .log-list { margin-top: 14px; }
+  .log-entry {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .log-entry:last-child { border-bottom: none; }
+  .log-date { font-size: 11px; color: var(--text3); min-width: 80px; }
+  .log-scene { color: var(--text); flex: 1; }
+  .log-note { font-size: 12px; color: var(--text2); flex: 1; }
+  .log-del { border: none; background: none; color: var(--text3); cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+  .log-del:hover { color: var(--coral); background: var(--coral-bg); }
+
+  /* ── RULES PAGE ── */
+  .rules-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .rules-add-card, .rules-list-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .section-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 16px; }
+  .form-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    font-size: 13px; color: var(--text);
+    font-family: var(--font-ui);
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.12s;
+  }
+  .form-textarea:focus { outline: none; border-color: var(--accent); }
+  .add-rule-btn {
+    margin-top: 10px;
+    padding: 7px 16px;
+    background: var(--accent);
+    color: white; border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px; cursor: pointer;
+    transition: opacity 0.12s;
+  }
+  .add-rule-btn:hover { opacity: 0.88; }
+
+  .rule-item {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    background: var(--bg);
+    position: relative;
+  }
+  .rule-item-cat {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    margin-bottom: 5px;
+  }
+  .rule-item-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .rule-item-del {
+    position: absolute; top: 8px; right: 8px;
+    border: none; background: none;
+    color: var(--text3); cursor: pointer;
+    font-size: 14px; padding: 2px 5px; border-radius: 4px;
+  }
+  .rule-item-del:hover { color: var(--coral); background: var(--coral-bg); }
+
+  /* ── UTILITIES ── */
+  .empty-state {
+    text-align: center; padding: 40px 20px;
+    color: var(--text3); font-size: 13px; line-height: 2;
+  }
+  .divider {
+    height: 1px; background: var(--border);
+    margin: 16px 0;
+  }
+  .badge {
+    display: inline-block; padding: 2px 8px;
+    border-radius: 20px; font-size: 11px; font-weight: 500;
+  }
+  .badge-verified { background: var(--teal-bg); color: var(--teal); }
+  .badge-new { background: var(--purple-bg); color: var(--purple); }
+
+  /* add node button */
+  .add-node-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px;
+    border: 1px dashed var(--border2);
+    border-radius: 20px;
+    background: none; cursor: pointer;
+    font-size: 11px; color: var(--text3);
+    margin-top: 8px;
+    transition: all 0.12s;
+  }
+  .add-node-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+
+  /* modal */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 480px; max-width: 90vw;
+    box-shadow: var(--shadow-md);
+  }
+  .modal-title { font-size: 15px; font-weight: 500; margin-bottom: 16px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .btn-secondary {
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: none; cursor: pointer;
+    font-size: 13px; color: var(--text2);
+    transition: all 0.12s;
+  }
+  .btn-secondary:hover { background: var(--bg2); }
+  .btn-primary {
+    padding: 7px 16px;
+    background: var(--accent); color: white;
+    border: none; border-radius: var(--radius-sm);
+    font-size: 13px; cursor: pointer;
+    transition: opacity 0.12s;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+
+  .node-legend {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-bottom: 16px; font-size: 12px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; color: var(--text2); }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0;
+  }
+
+  /* search */
+  .search-input {
+    width: 100%;
+    padding: 7px 10px 7px 30px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    font-size: 13px; color: var(--text);
+    font-family: var(--font-ui);
+    transition: border-color 0.12s;
+    margin-bottom: 12px;
+  }
+  .search-input:focus { outline: none; border-color: var(--accent); }
+  .search-wrap { position: relative; }
+  .search-icon {
+    position: absolute; left: 8px; top: 50%; transform: translateY(-60%);
+    font-size: 13px; color: var(--text3); pointer-events: none;
+  }
+
+  /* path highlight */
+  .tree-node.path-active {
+    outline: 2.5px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px var(--accent-bg);
+  }
+  .tree-connector.path-active,
+  .tree-connector-h.path-active {
+    background: var(--accent);
+  }
+
+  /* AI chat modal */
+  .chat-modal {
+    width: 560px; max-width: 95vw;
+    max-height: 80vh;
+    display: flex; flex-direction: column;
+  }
+  .chat-messages {
+    flex: 1; overflow-y: auto;
+    padding: 12px 0;
+    display: flex; flex-direction: column; gap: 10px;
+    min-height: 200px; max-height: 380px;
+  }
+  .chat-bubble {
+    max-width: 80%;
+    padding: 9px 13px;
+    border-radius: 12px;
+    font-size: 13px; line-height: 1.55;
+  }
+  .chat-bubble.them {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    align-self: flex-start;
+    border-bottom-left-radius: 3px;
+    color: var(--text);
+  }
+  .chat-bubble.me {
+    background: var(--accent);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 3px;
+  }
+  .chat-bubble.thinking {
+    background: var(--bg2); border: 1px dashed var(--border2);
+    color: var(--text3); font-style: italic;
+    align-self: flex-start;
+  }
+  .chat-input-row {
+    display: flex; gap: 8px; margin-top: 12px;
+    border-top: 1px solid var(--border); padding-top: 12px;
+  }
+  .chat-input {
+    flex: 1; padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-family: var(--font-ui);
+    color: var(--text); background: var(--bg);
+    resize: none; min-height: 38px; max-height: 100px;
+  }
+  .chat-input:focus { outline: none; border-color: var(--accent); }
+  .chat-send-btn {
+    padding: 8px 16px;
+    background: var(--accent); color: white;
+    border: none; border-radius: var(--radius-sm);
+    font-size: 13px; cursor: pointer;
+    white-space: nowrap; align-self: flex-end;
+  }
+  .chat-send-btn:hover { opacity: 0.88; }
+  .chat-send-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .chat-hint {
+    font-size: 11px; color: var(--text3);
+    margin-bottom: 8px; line-height: 1.5;
+  }
+
+  /* scroll hint */
+  .scroll-hint {
+    text-align: center; font-size: 11px; color: var(--text3);
+    padding: 6px; margin-bottom: 8px;
+  }
+
+  @media (max-width: 900px) {
+    .library-layout { grid-template-columns: 1fr; }
+    .filter-panel { position: static; display: flex; flex-wrap: wrap; gap: 16px; }
+    .rules-layout { grid-template-columns: 1fr; }
+    .log-form { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ── MOBILE FILTER BAR ── */
+  .mobile-filter-bar {
+    display: none;
+  }
+  .mobile-filter-scroll {
+    display: flex; gap: 8px; overflow-x: auto;
+    padding: 0 0 8px 0;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mobile-filter-scroll::-webkit-scrollbar { display: none; }
+  .mobile-chip {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    font-size: 13px; color: var(--text2);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.12s;
+  }
+  .mobile-chip.active {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .mobile-chip.culture-active {
+    background: #EEF3F0;
+    border-color: #7DB89A;
+    color: #2D6B52;
+  }
+
+  /* ── MOBILE STEP FLOW ── */
+  .mobile-step-flow {
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    padding-bottom: 20px;
+  }
+
+  .step-layer {
+    animation: stepIn 0.2s ease;
+  }
+  @keyframes stepIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-context {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 14px 16px;
+    background: var(--bg2);
+    border-left: 3px solid var(--border2);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    font-size: 13px; color: var(--text2);
+    line-height: 1.5;
+  }
+  .step-context-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text3);
+    margin-bottom: 3px;
+  }
+  .step-context.type-trigger  { border-color: var(--border2); background: var(--bg2); }
+  .step-context.type-nonverbal { border-color: #7DB89A; background: #EEF3F0; color: #2D6B52; }
+  .step-context.type-unclear  { border-color: #EF9F27; background: var(--amber-bg); }
+
+  .step-options-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    color: var(--text3); text-transform: uppercase;
+    margin-bottom: 8px; padding: 0 2px;
+  }
+
+  .step-option {
+    display: flex; align-items: flex-start; gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  .step-option:active { transform: scale(0.98); }
+  .step-option:hover  { border-color: var(--accent); box-shadow: var(--shadow-md); }
+  .step-option.selected {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+  }
+  .step-option.type-response  { border-left: 3px solid var(--purple); }
+  .step-option.type-trigger   { border-left: 3px solid var(--border2); }
+  .step-option.type-nonverbal { border-left: 3px solid #7DB89A; }
+  .step-option.type-end       { border-left: 3px solid var(--teal); background: var(--teal-bg); border-color: #5DCAA5; }
+  .step-option.type-unclear   { border-left: 3px solid #EF9F27; background: var(--amber-bg); border-color: #EF9F27; }
+  .step-option.verified { border-color: var(--teal); }
+  .step-option.dimmed { opacity: 0.38; pointer-events: none; }
+
+  .step-option-icon {
+    font-size: 16px; flex-shrink: 0; margin-top: 1px;
+  }
+  .step-option-body { flex: 1; }
+  .step-option-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text3);
+    margin-bottom: 3px;
+  }
+  .step-option-text {
+    font-size: 14px; color: var(--text); line-height: 1.5;
+    font-weight: 500;
+  }
+  .step-option-sub {
+    font-size: 12px; color: var(--text2); margin-top: 4px; line-height: 1.4;
+  }
+  .step-option-badges {
+    display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;
+  }
+  .step-badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600;
+  }
+  .step-badge-verified { background: var(--teal-bg); color: var(--teal); }
+  .step-badge-energy-low  { background: var(--teal-bg);  color: var(--teal); }
+  .step-badge-energy-mid  { background: var(--amber-bg); color: var(--amber); }
+  .step-badge-energy-high { background: var(--coral-bg); color: var(--coral); }
+  .step-chevron {
+    flex-shrink: 0; color: var(--text3); font-size: 16px; align-self: center;
+  }
+
+  .step-end-card {
+    padding: 14px 16px;
+    background: var(--teal-bg);
+    border: 1.5px solid #5DCAA5;
+    border-radius: var(--radius);
+    font-size: 14px; color: var(--teal);
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .step-actions {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin: 10px 0 16px;
+  }
+  .step-action-btn {
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--card); cursor: pointer;
+    font-size: 12px; color: var(--text2);
+    transition: all 0.12s;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .step-action-btn:hover { background: var(--bg2); }
+  .step-action-btn.verified { color: var(--teal); border-color: var(--teal); background: var(--teal-bg); }
+
+  .step-divider {
+    display: flex; align-items: center; gap: 8px;
+    margin: 4px 0 12px;
+    color: var(--text3); font-size: 11px;
+  }
+  .step-divider::before, .step-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .step-reset-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%;
+    padding: 12px;
+    margin-top: 12px;
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius);
+    background: none; cursor: pointer;
+    font-size: 13px; color: var(--text3);
+    transition: all 0.12s;
+  }
+  .step-reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .step-clarify-list {
+    background: var(--amber-bg);
+    border: 1px solid #EF9F27;
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .step-clarify-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+    color: var(--amber); text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .step-clarify-item {
+    padding: 10px 12px;
+    background: var(--card); border-radius: var(--radius-sm);
+    margin-bottom: 6px; font-size: 13px; color: var(--text);
+    border: 1px solid var(--border); cursor: pointer;
+    transition: all 0.12s;
+  }
+  .step-clarify-item:last-child { margin-bottom: 0; }
+  .step-clarify-item:active { background: #FFFBF3; border-color: var(--amber); }
+
+  /* variant sheet for mobile */
+  .step-variant-sheet {
+    background: var(--purple-bg);
+    border: 1px solid #AFA9EC;
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .step-variant-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+    color: var(--purple); text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .step-variant-item {
+    padding: 10px 12px;
+    background: var(--card); border-radius: var(--radius-sm);
+    margin-bottom: 6px; font-size: 13px; color: var(--text);
+    border: 1px solid transparent; cursor: pointer;
+    transition: all 0.12s;
+  }
+  .step-variant-item.active { border-color: var(--purple); color: var(--purple); font-weight: 500; }
+
+  @media (max-width: 680px) {
+    .page { padding: 12px; }
+    nav { padding: 0 12px; }
+
+    .mobile-filter-bar { display: block; margin-bottom: 16px; }
+    .filter-panel { display: none !important; }
+    .scene-grid { grid-template-columns: 1fr; gap: 8px; }
+    .library-layout { grid-template-columns: 1fr; gap: 0; }
+
+    /* On mobile: hide desktop tree, show step flow */
+    .tree-container { display: none; }
+    .scroll-hint    { display: none; }
+    .node-legend    { display: none; }
+    .mobile-step-flow { display: flex; }
+
+    .sim-header { flex-wrap: wrap; gap: 8px; }
+    .sim-title { font-size: 15px; }
+    .sim-tags  { margin-left: 0; }
+
+    .energy-bar { flex-wrap: wrap; gap: 8px; }
+    .energy-hint { width: 100%; margin-left: 0; }
+
+    .log-form { grid-template-columns: 1fr; }
+
+    /* bigger tap targets in library */
+    .scene-card { padding: 14px; }
+    .scene-card-title { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="lock-screen" style="position:fixed;inset:0;background:#FAF9F6;z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="text-align:center;">
+    <div style="font-family:'Georgia',serif;font-size:15px;color:#2A2825;margin-bottom:20px;letter-spacing:0.04em;">社交预演系统</div>
+    <input id="lock-input" type="password" placeholder="密码" style="padding:8px 14px;border:1px solid #CCC9BF;border-radius:6px;background:#fff;font-size:14px;color:#2A2825;text-align:center;outline:none;width:140px;" onkeydown="if(event.key==='Enter')checkPw()">
+    <div style="margin-top:10px;">
+      <button onclick="checkPw()" style="padding:7px 20px;background:#5B7FA6;color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer;">进入</button>
+    </div>
+    <div id="lock-err" style="font-size:12px;color:#C4503A;margin-top:8px;min-height:16px;"></div>
+  </div>
+</div>
+
+<nav>
+  <div class="nav-brand">社交预演 <span>simulator</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('library')">场景库</button>
+    <button class="nav-tab" onclick="showPage('rules')">规则手册</button>
+  </div>
+</nav>
+
+<!-- ══ PAGE: LIBRARY ══ -->
+<div id="page-library" class="page active">
+
+  <!-- Mobile filter bar (hidden on desktop) -->
+  <div class="mobile-filter-bar">
+    <div class="search-wrap" style="margin-bottom:10px;">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="scene-search-mobile" type="text" placeholder="搜索场景…" oninput="syncMobileSearch(this.value)" style="margin-bottom:0;">
+    </div>
+    <div class="mobile-filter-scroll" id="mobile-axis-chips">
+      <span class="mobile-chip active" onclick="setAxisFilterMobile('all', this)">全部</span>
+      <span class="mobile-chip" onclick="setAxisFilterMobile(0, this)">熟人一对一</span>
+      <span class="mobile-chip" onclick="setAxisFilterMobile(1, this)">熟人多人</span>
+      <span class="mobile-chip" onclick="setAxisFilterMobile(2, this)">不熟一对一</span>
+      <span class="mobile-chip" onclick="setAxisFilterMobile(3, this)">不熟多人</span>
+    </div>
+    <div class="mobile-filter-scroll" style="margin-top:6px;" id="mobile-extra-chips">
+      <span class="mobile-chip" id="mchip-energy-all" onclick="setEnergyFilterMobile('all', this)">全部能耗</span>
+      <span class="mobile-chip" id="mchip-energy-low" onclick="setEnergyFilterMobile('low', this)">低耗能</span>
+      <span class="mobile-chip" id="mchip-energy-mid" onclick="setEnergyFilterMobile('mid', this)">中等</span>
+      <span class="mobile-chip" id="mchip-energy-high" onclick="setEnergyFilterMobile('high', this)">高耗能</span>
+      <span class="mobile-chip" id="mchip-culture" onclick="toggleCultureMobile(this)">🏮 文化规则</span>
+    </div>
+  </div>
+
+  <div class="library-layout">
+    <div class="filter-panel">
+      <div class="filter-section">
+        <span class="filter-label">搜索</span>
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" id="scene-search" type="text" placeholder="关键词，如「敬酒」…" oninput="renderSceneGrid()">
+        </div>
+      </div>
+      <div class="filter-section">
+        <span class="filter-label">熟悉程度</span>
+        <button class="filter-btn active" onclick="setAxisFilter('all', this)">全部场景</button>
+        <button class="filter-btn" onclick="setAxisFilter(0, this)">熟人一对一</button>
+        <button class="filter-btn" onclick="setAxisFilter(1, this)">熟人多人</button>
+        <button class="filter-btn" onclick="setAxisFilter(2, this)">不熟一对一</button>
+        <button class="filter-btn" onclick="setAxisFilter(3, this)">不熟多人</button>
+      </div>
+      <div class="filter-section">
+        <span class="filter-label">目的</span>
+        <div id="purpose-filters">
+          <span class="filter-tag" onclick="togglePurposeFilter(0, this)">联络感情</span>
+          <span class="filter-tag" onclick="togglePurposeFilter(1, this)">任务办事</span>
+          <span class="filter-tag" onclick="togglePurposeFilter(2, this)">被动应对</span>
+          <span class="filter-tag" onclick="togglePurposeFilter(3, this)">主动发起</span>
+        </div>
+      </div>
+      <div class="filter-section" id="energy-filter-section">
+        <span class="filter-label">能量消耗</span>
+        <button class="filter-btn" onclick="setEnergyFilter('all', this)">全部</button>
+        <button class="filter-btn" onclick="setEnergyFilter('low', this)">低耗能</button>
+        <button class="filter-btn" onclick="setEnergyFilter('mid', this)">中等</button>
+        <button class="filter-btn" onclick="setEnergyFilter('high', this)">高耗能</button>
+      </div>
+      <div class="filter-section" id="culture-filter-section">
+        <span class="filter-label">标签</span>
+        <button class="filter-btn active" onclick="setCultureFilter(false, this)">全部</button>
+        <button class="filter-btn" onclick="setCultureFilter(true, this)">🏮 文化规则</button>
+      </div>
+      <div class="divider"></div>
+      <button class="filter-btn" onclick="openAddScene()" style="color:var(--accent);font-weight:500;">＋ 新建场景</button>
+    </div>
+    <div id="scene-grid" class="scene-grid"></div>
+  </div>
+</div>
+
+<!-- ══ PAGE: SIMULATOR ══ -->
+<div id="page-sim" class="page">
+  <div class="sim-header">
+    <button class="back-btn" onclick="showPage('library')">← 返回</button>
+    <div class="sim-title" id="sim-title">场景名称</div>
+    <div class="sim-tags" id="sim-tags"></div>
+    <button class="back-btn" onclick="openChatModal()" style="margin-left:8px;background:var(--purple-bg);border-color:#AFA9EC;color:var(--purple);">💬 即兴练习</button>
+  </div>
+
+  <div class="energy-bar">
+    <span class="energy-bar-label">今天的能量状态</span>
+    <div class="energy-btns">
+      <button class="energy-btn e-high" onclick="setEnergy('high', this)">高 ✦</button>
+      <button class="energy-btn e-mid active" onclick="setEnergy('mid', this)">中</button>
+      <button class="energy-btn e-low" onclick="setEnergy('low', this)">低 ↓</button>
+    </div>
+    <span class="energy-hint" id="energy-hint">显示所有路径</span>
+  </div>
+
+  <div class="node-legend">
+    <span class="legend-item"><span class="legend-dot" style="background:#E8E6F0;border:1.5px solid #CCC9BF"></span>对方的话（触发）</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#EEF3F0;border:1.5px solid #7DB89A"></span>非言语信号（动作/表情）</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#EEEDFE;border:1.5px solid #AFA9EC"></span>我的回应选项</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#E1F5EE;border:1.5px solid #5DCAA5"></span>结束节点 / 已验证路径</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#FAEEDA;border:1.5px solid #EF9F27"></span>信号不明 — 澄清话术</span>
+  </div>
+
+  <div class="scroll-hint">← 场景较宽时可横向滚动 →</div>
+
+  <div class="tree-container" id="tree-container">
+    <div id="tree-root" class="tree-root"></div>
+  </div>
+
+  <!-- Mobile Step Flow (hidden on desktop) -->
+  <div class="mobile-step-flow" id="mobile-step-flow"></div>
+
+  <!-- Energy Log -->
+  <div class="sim-log-section">
+    <div class="log-section-title">
+      📋 实际发生后记录
+      <span style="font-size:11px;color:var(--text3);font-weight:400;">（走完一条路径后填写，积累数据）</span>
+    </div>
+    <div class="log-form">
+      <div class="form-group">
+        <label class="form-label">实际消耗</label>
+        <select class="form-select" id="log-energy-select">
+          <option value="">选择...</option>
+          <option value="low">低 — 轻松</option>
+          <option value="mid">中 — 有消耗</option>
+          <option value="high">高 — 很疲惫</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注（可选）</label>
+        <input class="form-input" id="log-note-input" type="text" placeholder="哪里出乎意料，或哪条路径有效…">
+      </div>
+      <button class="log-submit" onclick="saveLog()">保存记录</button>
+    </div>
+    <div id="log-list" class="log-list"></div>
+  </div>
+</div>
+
+<!-- ══ PAGE: RULES ══ -->
+<div id="page-rules" class="page">
+  <div class="rules-layout">
+    <div class="rules-add-card">
+      <div class="section-title">添加规则</div>
+      <div class="form-group" style="margin-bottom:10px">
+        <label class="form-label">类别</label>
+        <select class="form-select" id="rule-cat-select" style="width:100%">
+          <option value="subtext">潜台词识别</option>
+          <option value="turn">轮转信号</option>
+          <option value="exit">退出方式</option>
+          <option value="clarify">澄清话术</option>
+          <option value="recover">事后恢复</option>
+          <option value="culture">文化规则</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">规则内容</label>
+        <textarea class="form-textarea" id="rule-text-input" placeholder="描述你发现的规律或有效的话术…例如：当对方说完一件事停顿超过2秒，通常是在等我回应。"></textarea>
+      </div>
+      <button class="add-rule-btn" onclick="addRule()">保存规则</button>
+    </div>
+    <div class="rules-list-card">
+      <div class="section-title">我的规则手册 <span id="rules-count" style="font-size:12px;color:var(--text3);font-weight:400;"></span></div>
+      <div id="rules-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADD NODE MODAL ══ -->
+<div class="modal-overlay" id="modal-add-node">
+  <div class="modal">
+    <div class="modal-title">在此处添加分支节点</div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label class="form-label">节点类型</label>
+      <select class="form-select" id="new-node-type" style="width:100%" onchange="toggleUnclearHint()">
+        <option value="trigger">对方的话（触发）</option>
+        <option value="nonverbal">对方的动作 / 非言语信号</option>
+        <option value="response">我的回应</option>
+        <option value="end">结束节点</option>
+        <option value="unclear">信号不明（触发澄清话术）</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label class="form-label">内容</label>
+      <textarea class="form-textarea" id="new-node-text" placeholder="输入节点文字…" style="min-height:60px"></textarea>
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label class="form-label">备注（可选）</label>
+      <input class="form-input" id="new-node-sub" type="text" placeholder="补充说明，适用条件等…" style="width:100%">
+    </div>
+    <div class="form-group" style="margin-bottom:4px">
+      <label class="form-label">能量消耗</label>
+      <select class="form-select" id="new-node-energy" style="width:100%">
+        <option value="">不标注</option>
+        <option value="low">低</option>
+        <option value="mid">中</option>
+        <option value="high">高</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn-primary" onclick="confirmAddNode()">添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADD SCENE MODAL ══ -->
+<div class="modal-overlay" id="modal-add-scene">
+  <div class="modal">
+    <div class="modal-title">新建场景</div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label class="form-label">场景名称</label>
+      <input class="form-input" id="new-scene-title" type="text" placeholder="例如：被问「最近怎么样」" style="width:100%">
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label class="form-label">简短描述</label>
+      <input class="form-input" id="new-scene-desc" type="text" placeholder="触发情境…" style="width:100%">
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label class="form-label">熟悉程度（主轴）</label>
+      <select class="form-select" id="new-scene-axis" style="width:100%">
+        <option value="0">熟人一对一</option>
+        <option value="1">熟人多人</option>
+        <option value="2">不熟一对一</option>
+        <option value="3">不熟多人</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label class="form-label">目的标签（可多选）</label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px" id="new-scene-purposes">
+        <span class="filter-tag" onclick="this.classList.toggle('active')" data-purpose="0">联络感情</span>
+        <span class="filter-tag" onclick="this.classList.toggle('active')" data-purpose="1">任务办事</span>
+        <span class="filter-tag" onclick="this.classList.toggle('active')" data-purpose="2">被动应对</span>
+        <span class="filter-tag" onclick="this.classList.toggle('active')" data-purpose="3">主动发起</span>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:4px">
+      <label class="form-label">能量基线</label>
+      <select class="form-select" id="new-scene-energy" style="width:100%">
+        <option value="low">低耗能</option>
+        <option value="mid" selected>中等</option>
+        <option value="high">高耗能</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeSceneModal()">取消</button>
+      <button class="btn-primary" onclick="confirmAddScene()">创建场景</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AI CHAT MODAL ══ -->
+<div class="modal-overlay" id="modal-chat">
+  <div class="modal chat-modal">
+    <div class="modal-title">💬 即兴对话练习 — <span id="chat-scene-name" style="color:var(--text2);font-weight:400;font-size:14px;"></span></div>
+    <div class="chat-hint" id="chat-hint"></div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="chat-input" placeholder="输入你的回应…（Enter 发送，Shift+Enter 换行）" rows="1" onkeydown="handleChatKey(event)"></textarea>
+      <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">发送</button>
+    </div>
+    <div class="modal-actions" style="margin-top:8px;">
+      <button class="btn-secondary" onclick="resetChat()">重新开始</button>
+      <button class="btn-secondary" onclick="closeChatModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════
+const AXIS_LABELS = ['熟人一对一','熟人多人','不熟一对一','不熟多人'];
+const PURPOSE_LABELS = ['联络感情','任务办事','被动应对','主动发起'];
+const PURPOSE_CLASS = ['tag-purpose-0','tag-purpose-1','tag-purpose-2','tag-purpose-3'];
+const AXIS_CLASS = ['axis-0','axis-1','axis-2','axis-3'];
+const ENERGY_LABELS = { low:'低耗能', mid:'中等', high:'高耗能' };
+
+const CLARIFY_TEMPLATES = [
+  '你是认真的还是在开玩笑？',
+  '你的意思是……我理解对吗？',
+  '等一下，你刚才说的是指……还是……？',
+  '我想确认一下我理解对了——你是说……？',
+  '我不太确定你的意思，可以再说一次吗？',
+  '你听起来有点……（停顿）我理解得对吗？',
+];
+
+// Default scenes with trees
+const DEFAULT_SCENES = [
+  {
+    id: 's1', title: '有人夸你的衣服或物品', axis: 2, purposes: [2],
+    energy: 'low', desc: '对方说「你这件外套好好看」——这是对话邀请信号，期待被接住并返回一个回合。',
+    tree: {
+      id:'n0', type:'trigger', text:'「你这件外套好好看！」', sub:'对话邀请信号', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'谢谢，上个月买的，当时一眼就喜欢了。', sub:'接住＋一句背景，完整', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'「哪里买的？」', sub:'对方想继续', energy:'',
+              children:[
+                { id:'n1a1', type:'end', text:'告知→自然结束', sub:'1-2句即可', energy:'low', children:[] }
+              ]
+            },
+            { id:'n1b', type:'end', text:'对方微笑，对话自然结束', sub:'无需补充', energy:'low', children:[] }
+          ]
+        },
+        { id:'n2', type:'response', text:'谢谢！（微笑）', sub:'极简版，完全合法', energy:'low',
+          children:[
+            { id:'n2a', type:'end', text:'对话通常自然结束', sub:'零追加压力', energy:'low', children:[] }
+          ]
+        },
+        { id:'n3', type:'response', text:'谢谢，你今天这件也很好看。', sub:'互惠结构，对话完整闭合', energy:'low',
+          children:[
+            { id:'n3a', type:'end', text:'双方各自结束，零压力', energy:'low', children:[] }
+          ]
+        },
+        { id:'n4', type:'unclear', text:'对方语气不确定——是真心还是客套？', sub:'感知到信号异常', energy:'',
+          children:[]
+        }
+      ]
+    }
+  },
+  {
+    id: 's2', title: '电梯或走廊偶遇认识的人', axis: 0, purposes: [2],
+    energy: 'low', desc: '只需维持30-90秒，填充型话语完全合规，不需要实质内容。',
+    tree: {
+      id:'n0', type:'trigger', text:'对方看着你，脚步放慢', sub:'偶遇触发', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「最近忙不忙？」', sub:'万能开场，任何回答都能接「嗯我也是」结束', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'对方随意回答', energy:'', children:[
+              { id:'n1a1', type:'end', text:'「嗯，我也是。」→ 各自走开', sub:'完整闭合', energy:'low', children:[] }
+            ]}
+          ]
+        },
+        { id:'n2', type:'response', text:'「你去几楼？」', sub:'在电梯里。功能性话语，天然有终点', energy:'low',
+          children:[
+            { id:'n2a', type:'end', text:'到楼层后「好，拜。」', sub:'自然结束', energy:'low', children:[] }
+          ]
+        },
+        { id:'n3', type:'response', text:'点头微笑，继续走', sub:'非言语信号，大多数关系足够', energy:'low',
+          children:[
+            { id:'n3a', type:'end', text:'无需语言，节省全部认知资源', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's3', title: '对方分享一件事，不知该怎么回应', axis: 0, purposes: [0,2],
+    energy: 'mid', desc: '对方说了一件好事或坏事，你不确定对方想要的是什么——共鸣、建议，还是只是想说出来？',
+    tree: {
+      id:'n0', type:'trigger', text:'对方分享一件事（好事或坏事）', energy:'',
+      children:[
+        { id:'n1', type:'unclear', text:'不确定对方想要什么回应', sub:'用澄清话术先探明意图', energy:'', children:[] },
+        { id:'n2', type:'response', text:'「听起来你有点……（停顿）发生什么了？」', sub:'邀请对方展开，自己不用立刻表态', energy:'mid',
+          children:[
+            { id:'n2a', type:'trigger', text:'对方开始细说', energy:'', children:[
+              { id:'n2a1', type:'response', text:'「嗯……」（偶尔回应）', sub:'倾听模式，每2分钟一个简短回应', energy:'mid', children:[
+                { id:'n2a1a', type:'end', text:'等对方说完，问「你现在想怎么做？」', sub:'推迟建议模式', energy:'mid', children:[] }
+              ]}
+            ]}
+          ]
+        },
+        { id:'n3', type:'response', text:'「我能理解那种感觉。」', sub:'共鸣回应，不立刻给建议', energy:'low',
+          children:[
+            { id:'n3a', type:'end', text:'对方感到被接住，对话可以自然推进', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's4', title: '对方说了句你听不懂是认真还是玩笑的话', axis: 0, purposes: [2],
+    energy: 'mid', desc: '感知到信号异常但无法自动解码含义——反讽、玩笑边界不清晰。',
+    tree: {
+      id:'n0', type:'trigger', text:'对方说了一句语气模糊的话', sub:'反讽或玩笑？', energy:'',
+      children:[
+        { id:'n1', type:'unclear', text:'你是认真的还是在开玩笑？', sub:'直接澄清，合法且常见', energy:'', children:[] },
+        { id:'n2', type:'response', text:'先当认真处理，回应字面意思', sub:'如果理解错了，对方通常会更正', energy:'mid',
+          children:[
+            { id:'n2a', type:'trigger', text:'对方更正「不是啦我只是开个玩笑」', energy:'', children:[
+              { id:'n2a1', type:'response', text:'「啊哈哈，我还真没听出来。」', sub:'承认即可，不需要假装懂了', energy:'low', children:[
+                { id:'n2a1a', type:'end', text:'对话继续，无需解释', energy:'low', children:[] }
+              ]}
+            ]},
+            { id:'n2b', type:'end', text:'对方继续当真回应——判断正确', energy:'low', children:[] }
+          ]
+        },
+        { id:'n3', type:'response', text:'微笑但不明确回应，等对方继续', sub:'给自己观察的时间', energy:'low',
+          children:[
+            { id:'n3a', type:'trigger', text:'对方继续说，意图变清晰', energy:'', children:[
+              { id:'n3a1', type:'end', text:'信息补全后正常回应', energy:'low', children:[] }
+            ]}
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's5', title: '对话中出现长时间沉默', axis: 0, purposes: [2],
+    energy: 'mid', desc: '不知道这个沉默该不该填，填什么，还是等对方。',
+    tree: {
+      id:'n0', type:'trigger', text:'对话停下来了，沉默超过4秒', energy:'',
+      children:[
+        { id:'n1', type:'unclear', text:'不确定这个沉默是结束信号还是等我说话', sub:'', energy:'', children:[] },
+        { id:'n2', type:'response', text:'引用刚才对方说的内容「你刚才提到……」', sub:'延续话题，不用想新内容', energy:'mid',
+          children:[
+            { id:'n2a', type:'end', text:'对话重新流动', energy:'mid', children:[] }
+          ]
+        },
+        { id:'n3', type:'response', text:'「所以你是说……？」问一个跟进问题', sub:'把话权还给对方', energy:'low',
+          children:[
+            { id:'n3a', type:'end', text:'对方继续说，沉默化解', energy:'low', children:[] }
+          ]
+        },
+        { id:'n4', type:'response', text:'保持安静，等对方先开口', sub:'沉默不必然要由你来填', energy:'low',
+          children:[
+            { id:'n4a', type:'trigger', text:'对方填了沉默', energy:'', children:[
+              { id:'n4a1', type:'end', text:'正常回应', energy:'low', children:[] }
+            ]},
+            { id:'n4b', type:'end', text:'双方同时停，对话自然结束', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's6', title: '被问「你在想什么/你怎么这么安静」', axis: 2, purposes: [2],
+    energy: 'mid', desc: '被迫暴露内部状态。直接说「没什么」被认为是封闭，但真实状态又难以言语化。',
+    tree: {
+      id:'n0', type:'trigger', text:'「你怎么这么安静？在想什么呢？」', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「只是在消化一下之前说的内容。」', sub:'真实且无需展开', energy:'low',
+          children:[
+            { id:'n1a', type:'end', text:'通常对方接受，话题继续', energy:'low', children:[] }
+          ]
+        },
+        { id:'n2', type:'response', text:'「我有点在想……（提一件近期真实的事）」', sub:'给一个表面内容，不需要很深', energy:'mid',
+          children:[
+            { id:'n2a', type:'end', text:'对方感到被接近，对话可延续', energy:'mid', children:[] }
+          ]
+        },
+        { id:'n3', type:'response', text:'「我通常就是话比较少，不是因为不好。」', sub:'直接说明，减少误解', energy:'mid',
+          children:[
+            { id:'n3a', type:'end', text:'多数人接受这个说明', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's7', title: '朋友突然介绍新朋友给你', axis: 0, purposes: [2],
+    energy: 'high', desc: '社交动机自动切断。你对熟人的脚本不适用于陌生人，需要切换模式。',
+    tree: {
+      id:'n0', type:'trigger', text:'朋友说「这是我朋友XX，你们认识一下」', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「你好，我是[名字]。」（微笑）', sub:'名字交换，最小合规动作', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'对方说「久仰久仰，[朋友名]常提到你！」', energy:'', children:[
+              { id:'n1a1', type:'unclear', text:'不确定「常提到」是客套话还是真的', sub:'', energy:'', children:[] },
+              { id:'n1a2', type:'response', text:'「都是他瞎说的，哈哈。」', sub:'自嘲式闭合，无需追问', energy:'low', children:[
+                { id:'n1a2a', type:'end', text:'对话可以继续，也可以自然停', energy:'low', children:[] }
+              ]}
+            ]},
+            { id:'n1b', type:'trigger', text:'对方问「你们是怎么认识的？」', energy:'', children:[
+              { id:'n1b1', type:'response', text:'一句话说认识背景，把话返回对方「你们呢？」', energy:'mid', children:[
+                { id:'n1b1a', type:'end', text:'信息互换完成，对话可以落到别处', energy:'mid', children:[] }
+              ]}
+            ]}
+          ]
+        },
+        { id:'n2', type:'response', text:'点头微笑，说出名字，保持观察者模式', sub:'不主动推进，跟随熟人主导', energy:'low',
+          children:[
+            { id:'n2a', type:'end', text:'熟人主导对话，你随时可以安静在场', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's8', title: '群体中有人争论，你旁观', axis: 1, purposes: [2],
+    energy: 'high', desc: '你在场但不是当事人，不知道是否该表态，保持沉默又担心被注意。',
+    tree: {
+      id:'n0', type:'trigger', text:'群体内有人发生争论，气氛紧张', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'保持沉默，观察者模式全程', sub:'完全合法，不是缺席', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'有人问「你怎么看？」', energy:'', children:[
+              { id:'n1a1', type:'response', text:'「我觉得双方说的都有一定道理。」', sub:'中立回应，不加入任何一方', energy:'mid', children:[
+                { id:'n1a1a', type:'end', text:'通常可以把话权返还给其他人', energy:'mid', children:[] }
+              ]},
+              { id:'n1a2', type:'response', text:'「我还没想好，你们继续。」', sub:'延迟策略，完全合法', energy:'low', children:[
+                { id:'n1a2a', type:'end', text:'对话继续，你退回观察位置', energy:'low', children:[] }
+              ]}
+            ]},
+            { id:'n1b', type:'end', text:'争论自行解决，你无需介入', energy:'low', children:[] }
+          ]
+        },
+        { id:'n2', type:'response', text:'问一个中性的跟进问题给其中一方', sub:'「你是因为X这个原因吗？」—— 表示在场但不表态', energy:'mid',
+          children:[
+            { id:'n2a', type:'end', text:'有参与感，不卷入立场', energy:'mid', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's9', title: '需要说「不」或提出异议', axis: 2, purposes: [1,3],
+    energy: 'high', desc: '需要拒绝请求或对不熟的人表达不同意见，担心被认为不合作或冒犯。',
+    tree: {
+      id:'n0', type:'trigger', text:'对方提出请求或说法，你需要拒绝或反对', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「这个我可能帮不上——[一句原因]。」', sub:'直接说不，给一个原因即可，不必过度解释', energy:'mid',
+          children:[
+            { id:'n1a', type:'trigger', text:'对方追问或表现失落', energy:'', children:[
+              { id:'n1a1', type:'response', text:'「如果是[另一件事]我可以帮上，这个真的不行。」', sub:'给一个替代，同时坚持立场', energy:'mid', children:[
+                { id:'n1a1a', type:'end', text:'边界设立，关系通常不受损', energy:'mid', children:[] }
+              ]},
+              { id:'n1a2', type:'end', text:'重复一次「不行」，不再解释', energy:'low', children:[] }
+            ]},
+            { id:'n1b', type:'end', text:'对方理解，事情结束', energy:'low', children:[] }
+          ]
+        },
+        { id:'n2', type:'response', text:'「我有不同看法——[说一句]。」', sub:'表达异议用第一人称，不说「你错了」', energy:'mid',
+          children:[
+            { id:'n2a', type:'end', text:'意见被记录，无需对方接受', energy:'mid', children:[] }
+          ]
+        },
+        { id:'n3', type:'response', text:'「我需要想一想，可以之后再告诉你吗？」', sub:'延迟策略，给自己准备时间', energy:'low',
+          children:[
+            { id:'n3a', type:'end', text:'获得时间，之后再决定怎么说', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's10', title: '第一次联系某人（发消息开头）', axis: 2, purposes: [1,3],
+    energy: 'mid', desc: '不知道如何开场，担心打扰，或不知道对方是否记得你。',
+    tree: {
+      id:'n0', type:'trigger', text:'需要联系一个不熟的人', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「你好，我是[名字]，[一句说明认识背景]。想问你[具体事情]。」', sub:'三段结构：身份→背景→目的，无需铺垫', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'对方回复了', energy:'', children:[
+              { id:'n1a1', type:'end', text:'正常推进，目的已传达', energy:'low', children:[] }
+            ]},
+            { id:'n1b', type:'trigger', text:'对方没回复（24-48小时后）', energy:'', children:[
+              { id:'n1b1', type:'response', text:'「不好意思再打扰，如果方便的话……」（一句跟进）', energy:'low', children:[
+                { id:'n1b1a', type:'end', text:'跟进一次是合理的，之后放下', energy:'low', children:[] }
+              ]}
+            ]}
+          ]
+        },
+        { id:'n2', type:'response', text:'「打扰了，我是[名字]——[一句来意]，谢谢。」', sub:'简洁，对方看一眼就知道你想要什么', energy:'low',
+          children:[
+            { id:'n2a', type:'end', text:'清晰表达来意，对方回与不回都不尴尬', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's11', title: '小组讨论中被点名发言', axis: 3, purposes: [1,2],
+    energy: 'high', desc: '被迫实时表达，没有准备时间，且在多人场合。',
+    tree: {
+      id:'n0', type:'trigger', text:'「[你名字]，你怎么看？」', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「我还在想……我觉得[一个点]比较关键。」', sub:'「还在想」是真实且可接受的开场，不用装作有完整答案', energy:'mid',
+          children:[
+            { id:'n1a', type:'end', text:'说完把话权还给群体，无需展开', energy:'mid', children:[] }
+          ]
+        },
+        { id:'n2', type:'response', text:'「我同意[刚才某人说的]，补充一点：……」', sub:'借力结构，不需要完全原创', energy:'mid',
+          children:[
+            { id:'n2a', type:'end', text:'1-2句即止，简短贡献完整', energy:'mid', children:[] }
+          ]
+        },
+        { id:'n3', type:'response', text:'「我需要看一下[资料/数据]再说，先往下继续？」', sub:'延迟策略，工作场景完全合法', energy:'low',
+          children:[
+            { id:'n3a', type:'end', text:'对话继续流向他人，你退回安全位置', energy:'low', children:[] }
+          ]
+        },
+        { id:'n4', type:'unclear', text:'不确定被点名是真的在问意见，还是礼貌性的', sub:'', energy:'', children:[] }
+      ]
+    }
+  },
+  {
+    id: 's12', title: '对方情绪激动找你倾诉', axis: 0, purposes: [0,2],
+    energy: 'high', desc: '逻辑审查模式自动启动，但对方需要的是被感受到，而不是被解决。',
+    tree: {
+      id:'n0', type:'trigger', text:'对方情绪激动，开始倾诉', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「听起来你真的很累。」', sub:'命名情绪而非分析原因，暂缓逻辑审查模式', energy:'mid',
+          children:[
+            { id:'n1a', type:'trigger', text:'对方继续说', energy:'', children:[
+              { id:'n1a1', type:'response', text:'每2分钟问一个问题「然后呢？」或「这发生多久了？」', sub:'维持倾听状态，延迟给建议', energy:'mid', children:[
+                { id:'n1a1a', type:'trigger', text:'对方说「你觉得我该怎么办？」', energy:'', children:[
+                  { id:'n1a1a1', type:'response', text:'「我有个想法，你要听吗？」', sub:'征求许可再给建议，不强行切换', energy:'mid', children:[
+                    { id:'n1a1a1a', type:'end', text:'得到许可后可以切换到解决模式', energy:'mid', children:[] }
+                  ]}
+                ]}
+              ]}
+            ]},
+            { id:'n1b', type:'end', text:'对方情绪释放后自然平静，不需要你做什么', energy:'mid', children:[] }
+          ]
+        },
+        { id:'n2', type:'response', text:'「发生什么了？」', sub:'开放式问题，让对方决定说什么', energy:'low',
+          children:[
+            { id:'n2a', type:'end', text:'对方开始叙述，进入倾听模式', energy:'mid', children:[] }
+          ]
+        },
+        { id:'n3', type:'response', text:'「我现在能量有点低，但我在听。」', sub:'如果自己处于低能量状态，可以提前说明', energy:'low',
+          children:[
+            { id:'n3a', type:'end', text:'设立条件，对方通常理解', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's13', title: '需要主动结束对话', axis: 0, purposes: [3],
+    energy: 'mid', desc: '脚本耗尽，或能量低，需要离开但不知道怎么开口不尴尬。',
+    tree: {
+      id:'n0', type:'trigger', text:'你意识到需要结束这段对话了', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「好，我去忙了，待会见。」', sub:'功能性结束，语气平常，无需解释原因', energy:'low',
+          children:[
+            { id:'n1a', type:'end', text:'直接离开，完整且合法', energy:'low', children:[] }
+          ]
+        },
+        { id:'n2', type:'response', text:'「我还有件事要处理，先走了。」', sub:'任何事都是合法的「一件事」，无需说明', energy:'low',
+          children:[
+            { id:'n2a', type:'end', text:'对话结束', energy:'low', children:[] }
+          ]
+        },
+        { id:'n3', type:'response', text:'借用当前对话内容「说到这里，我想起我得……」', sub:'话题跳板型退出，自然', energy:'mid',
+          children:[
+            { id:'n3a', type:'end', text:'对方通常不会追问原因', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's14', title: '久未联系的人突然找你', axis: 0, purposes: [0,2],
+    energy: 'mid', desc: '不知道对方的期待是什么，是寒暄，是想深聊，还是有目的。',
+    tree: {
+      id:'n0', type:'trigger', text:'「好久不见，最近怎么样？」', energy:'',
+      children:[
+        { id:'n1', type:'unclear', text:'不确定这是开场白还是真的在问', sub:'', energy:'', children:[] },
+        { id:'n2', type:'response', text:'「还好，最近在[一件事]。你呢？」', sub:'简短自我更新＋返回问题，标准互惠结构', energy:'low',
+          children:[
+            { id:'n2a', type:'trigger', text:'对方继续闲聊', energy:'', children:[
+              { id:'n2a1', type:'end', text:'走寒暄路线，聊几个回合即可', energy:'low', children:[] }
+            ]},
+            { id:'n2b', type:'trigger', text:'对方「其实我有件事想问你……」', energy:'', children:[
+              { id:'n2b1', type:'response', text:'「你说。」（等对方说出来意）', sub:'不必提前猜，等明确信息', energy:'low', children:[
+                { id:'n2b1a', type:'end', text:'来意清晰后正常处理', energy:'mid', children:[] }
+              ]}
+            ]}
+          ]
+        },
+        { id:'n3', type:'response', text:'「还行！最近你怎么样，有什么事吗？」', sub:'直接问来意，省去猜测', energy:'low',
+          children:[
+            { id:'n3a', type:'end', text:'对方会说或会说「就是叙叙旧」', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's15', title: '需要确认自己理解正确（怕暴露没听懂）', axis: 2, purposes: [1,2],
+    energy: 'mid', desc: '没听懂，或不确定，但担心开口问会显得没在认真听，或显得能力不足。',
+    tree: {
+      id:'n0', type:'trigger', text:'对方说了一些你不确定理解正确的内容', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「我理解你的意思是[复述]——对吗？」', sub:'确认式复述。显示你在听，且愿意对齐', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'对方说「对」', energy:'', children:[
+              { id:'n1a1', type:'end', text:'理解确认，继续', energy:'low', children:[] }
+            ]},
+            { id:'n1b', type:'trigger', text:'对方说「不是，是……」', energy:'', children:[
+              { id:'n1b1', type:'end', text:'获得更清晰的信息，好过假装听懂', energy:'low', children:[] }
+            ]}
+          ]
+        },
+        { id:'n2', type:'response', text:'「等一下，你说的[X]是指……？」', sub:'聚焦一个不清楚的词，不必承认整体没听懂', energy:'low',
+          children:[
+            { id:'n2a', type:'end', text:'对方解释，信息补全', energy:'low', children:[] }
+          ]
+        },
+        { id:'n3', type:'unclear', text:'完全没听懂，但场合不适合当场问', sub:'', energy:'', children:[] }
+      ]
+    }
+  },
+  {
+    id: 's16', title: '会议结束后被单独留下来问话', axis: 2, purposes: [1,2],
+    energy: 'high', desc: '没有预演时间，一对一，且通常是对方有特定目的，你不知道要被问什么。',
+    tree: {
+      id:'n0', type:'trigger', text:'「你等一下，我想跟你聊两句。」', energy:'',
+      children:[
+        { id:'n1', type:'unclear', text:'不确定是好事还是坏事，也不知道主题', sub:'等对方先说，不提前猜', energy:'', children:[] },
+        { id:'n2', type:'trigger', text:'对方说出具体事情', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'「好，我明白了。」（等对方说完再回应）', sub:'先接收全部信息，不中途打断', energy:'mid', children:[
+              { id:'n2a1', type:'response', text:'「我需要想一下，可以明天给你回复吗？」', sub:'不必当场决定，延迟完全合法', energy:'low', children:[
+                { id:'n2a1a', type:'end', text:'获得准备时间', energy:'low', children:[] }
+              ]},
+              { id:'n2a2', type:'end', text:'当场有答案则直接回应', energy:'mid', children:[] }
+            ]}
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's17', title: '聚餐中大家聊你不感兴趣的话题', axis: 1, purposes: [0,2],
+    energy: 'high', desc: '全程沉默被注意到，但强行参与消耗极大，且没有内容可说。',
+    tree: {
+      id:'n0', type:'trigger', text:'群体在聊你不了解或不感兴趣的话题', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'保持观察者姿态，偶尔点头', sub:'安静在场是合法状态，不是失礼', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'有人问「[你名字]你觉得呢？」', energy:'', children:[
+              { id:'n1a1', type:'response', text:'「这个我了解得不多，你们继续，我在学习。」', sub:'真实且恰当，不假装有意见', energy:'low', children:[
+                { id:'n1a1a', type:'end', text:'话题重回群体，你退回安全位置', energy:'low', children:[] }
+              ]}
+            ]},
+            { id:'n1b', type:'trigger', text:'话题转换，变成你了解的内容', energy:'', children:[
+              { id:'n1b1', type:'response', text:'参与一句，然后可以退回沉默', sub:'不必全程参与，一次参与已经足够', energy:'mid', children:[
+                { id:'n1b1a', type:'end', text:'做了贡献，无需维持', energy:'mid', children:[] }
+              ]}
+            ]}
+          ]
+        },
+        { id:'n2', type:'response', text:'问一个跟进问题给最近发言的人', sub:'「你是从什么时候开始[话题]的？」—— 表示在场，不需要自己有内容', energy:'mid',
+          children:[
+            { id:'n2a', type:'end', text:'对方开始讲自己的故事，你重回听的模式', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's18', title: '被熟人当众调侃', axis: 1, purposes: [2],
+    energy: 'high', desc: '玩笑性质，但你不确定边界，也不知道对方期待你怎么反应，全场在看。',
+    tree: {
+      id:'n0', type:'trigger', text:'熟人在多人场合当众调侃你', energy:'',
+      children:[
+        { id:'n1', type:'unclear', text:'这个玩笑的边界是？对方是友善还是有攻击性？', sub:'', energy:'', children:[] },
+        { id:'n2', type:'response', text:'「哈哈，是啊。」（轻松承认）', sub:'如果判断是友善玩笑，接住即可，不需要反击也不需要反驳', energy:'low',
+          children:[
+            { id:'n2a', type:'end', text:'话题自然过去，你未被激怒', energy:'low', children:[] }
+          ]
+        },
+        { id:'n3', type:'response', text:'「这个……」（停顿，微笑，不接话）', sub:'不配合也不对抗，话题通常会流走', energy:'low',
+          children:[
+            { id:'n3a', type:'end', text:'对方或他人把话题带走', energy:'low', children:[] }
+          ]
+        },
+        { id:'n4', type:'response', text:'之后单独告诉对方「那个玩笑我不太舒服」', sub:'不在多人场合处理，私下说更有效', energy:'mid',
+          children:[
+            { id:'n4a', type:'end', text:'边界清晰，关系可以维持', energy:'mid', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's19', title: '熟人小聚，其中有不认识的人被带来', axis: 1, purposes: [0,2],
+    energy: 'high', desc: '对熟人的脚本失效，新人加入打乱已有平衡，不知道如何在熟人和新人之间定位自己。',
+    tree: {
+      id:'n0', type:'trigger', text:'熟人聚会，突然多了你不认识的人', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'专注与熟人互动，对新人保持礼貌在场', sub:'不需要主动融入新人，也不需要刻意回避', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'新人主动跟你说话', energy:'', children:[
+              { id:'n1a1', type:'response', text:'按「不熟一对一」脚本处理', sub:'切换到不熟模式即可', energy:'mid', children:[
+                { id:'n1a1a', type:'end', text:'不熟一对一对话流程', energy:'mid', children:[] }
+              ]}
+            ]},
+            { id:'n1b', type:'end', text:'聚会结束，你完整参与了对你友好的部分', energy:'low', children:[] }
+          ]
+        },
+        { id:'n2', type:'response', text:'「你是[熟人名字]的……？」问一个背景问题', sub:'通过熟人建立连接，最低成本的破冰', energy:'low',
+          children:[
+            { id:'n2a', type:'end', text:'背景清晰后可继续或退回', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's20', title: '主动发起联络（久未联系的熟人）', axis: 0, purposes: [0,3],
+    energy: 'mid', desc: '想联系，但不知道用什么开头，怕打扰，怕对方认为有所图。',
+    tree: {
+      id:'n0', type:'trigger', text:'你想主动联系一个久未联系的熟人', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「最近看到[某件事/某个地方]想到你了。你最近好吗？」', sub:'有具体触发点，比「好久不见」自然', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'对方回复了', energy:'', children:[
+              { id:'n1a1', type:'end', text:'正常推进，目的达到', energy:'low', children:[] }
+            ]},
+            { id:'n1b', type:'trigger', text:'对方没回复', energy:'', children:[
+              { id:'n1b1', type:'end', text:'发送本身已经完成了联系意图，等待即可', energy:'low', children:[] }
+            ]}
+          ]
+        },
+        { id:'n2', type:'response', text:'转发一件相关的事「这个想到你，分享给你」', sub:'低压力开头，不需要对方回应也不尴尬', energy:'low',
+          children:[
+            { id:'n2a', type:'end', text:'联系建立，对方接与不接都合理', energy:'low', children:[] }
+          ]
+        },
+        { id:'n3', type:'response', text:'「最近你怎么样？好久没联系了。」', sub:'直接且真实，不过度铺垫', energy:'low',
+          children:[
+            { id:'n3a', type:'end', text:'正常联络，期待合理', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's21', title: '工作群被@到需要回应', axis: 3, purposes: [1,2],
+    energy: 'low', desc: '文字形式，有时间准备，不需要实时表演，最低能耗社交之一。',
+    tree: {
+      id:'n0', type:'trigger', text:'工作群里有人@你', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「好的，[确认收到要点]，我来处理。」', sub:'确认收到＋一句关键回应，简洁', energy:'low',
+          children:[
+            { id:'n1a', type:'end', text:'信息传达，任务清晰', energy:'low', children:[] }
+          ]
+        },
+        { id:'n2', type:'response', text:'「收到，我需要[时间/资料]才能确认，明天给你回复。」', sub:'不必当场解决，给自己时间', energy:'low',
+          children:[
+            { id:'n2a', type:'end', text:'期限设定，压力释放', energy:'low', children:[] }
+          ]
+        },
+        { id:'n3', type:'unclear', text:'不确定这条@是在问意见还是只是通知你', sub:'', energy:'', children:[] }
+      ]
+    }
+  },
+  {
+    id: 's22', title: '被介绍给陌生人（正式场合）', axis: 2, purposes: [1,2],
+    energy: 'mid', desc: '高度脚本化场景，规则清晰：名字交换 → 共同话题探测 → 可以礼貌撤退。',
+    tree: {
+      id:'n0', type:'trigger', text:'「这位是[名字]，你们认识一下。」', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「你好，我是[名字]，[一句身份说明]。」', sub:'最小合规动作，身份交换完成', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'对方问「你们是怎么认识的？」', energy:'', children:[
+              { id:'n1a1', type:'response', text:'一句话说背景，用对方刚说的词开头下一句', sub:'「你之前说的X，是什么意思？」可延长5分钟', energy:'mid', children:[
+                { id:'n1a1a', type:'end', text:'话题落定，可以礼貌撤退', energy:'mid', children:[] }
+              ]}
+            ]},
+            { id:'n1b', type:'trigger', text:'对方问「你是做什么的？」', energy:'', children:[
+              { id:'n1b1', type:'response', text:'「我在[领域/工作]。你呢？」', sub:'回答＋返回，互惠结构', energy:'low', children:[
+                { id:'n1b1a', type:'end', text:'信息互换完成', energy:'low', children:[] }
+              ]}
+            ]}
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's23', title: '对方问你一个你没有答案的私人问题', axis: 2, purposes: [2],
+    energy: 'mid', desc: '对方问了一个你没想好答案的问题，或者你不想回答，但不知道怎么应对。',
+    tree: {
+      id:'n0', type:'trigger', text:'对方问了一个私人性质的问题', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「这个我还没想清楚。」', sub:'真实且完整。不需要解释为什么没想清楚', energy:'low',
+          children:[
+            { id:'n1a', type:'end', text:'话题可以继续，你不必给出答案', energy:'low', children:[] }
+          ]
+        },
+        { id:'n2', type:'response', text:'「这个问题比较难回答……（停顿）」然后转换话题', sub:'停顿本身是一个信号，多数人会放弃追问', energy:'low',
+          children:[
+            { id:'n2a', type:'end', text:'话题转移，边界自然设立', energy:'low', children:[] }
+          ]
+        },
+        { id:'n3', type:'response', text:'「嗯……我更想听你的看法，你怎么看？」', sub:'把问题返还，不一定有效但可以一试', energy:'mid',
+          children:[
+            { id:'n3a', type:'end', text:'话题转移到对方，你退回听的模式', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's24', title: '聚餐/活动快结束，需要道别', axis: 1, purposes: [0,2],
+    energy: 'low', desc: '不知道道别该走多少个回合，什么时候才是真的结束，什么时候是「假结束」。',
+    tree: {
+      id:'n0', type:'trigger', text:'活动即将结束，开始出现道别信号', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「好，那我先走了，下次见！」', sub:'「先走了」是最清晰的退出信号，无需解释', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'对方说「好，保重！」', energy:'', children:[
+              { id:'n1a1', type:'end', text:'道别完成，离开', energy:'low', children:[] }
+            ]},
+            { id:'n1b', type:'trigger', text:'对方延续话题「对了，我还想问你……」', energy:'', children:[
+              { id:'n1b1', type:'response', text:'「我出门了，你发我消息？」', sub:'实体离场，切换到异步频道', energy:'low', children:[
+                { id:'n1b1a', type:'end', text:'切换成功，对话在文字里继续', energy:'low', children:[] }
+              ]}
+            ]}
+          ]
+        },
+        { id:'n2', type:'unclear', text:'不确定大家是真的要走了还是只是说说', sub:'', energy:'', children:[] },
+        { id:'n3', type:'response', text:'观察最先离开的人怎么道别，复制同样的结构', sub:'系统化提取：看别人做什么，照做', energy:'low',
+          children:[
+        { id:'n3a', type:'end', text:'利用他人示范降低决策成本', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's25', title: '被敬酒但不喝酒', axis: 0, purposes: [1,2],
+    energy: 'high', culture: true, desc: '被当众敬酒，不喝酒或不能喝，需要即时处理，担心失礼或被强劝。',
+    tree: {
+      id:'n0', type:'trigger', text:'有人端起杯子走向你，准备敬酒', energy:'',
+      children:[
+        { id:'n0a', type:'nonverbal', text:'对方眼神看向你，举杯示意', sub:'信号：你是这轮敬酒的目标', energy:'',
+          children:[
+            { id:'n0a1', type:'response', text:'起立，端起茶杯或饮料杯，微笑迎向对方', sub:'不需要解释，先做动作，再开口', energy:'low',
+              children:[
+                { id:'n0a1a', type:'response', text:'「我身体原因不能喝酒，以茶代酒，心意是一样的——敬您！」', sub:'提原因+表心意+完成敬酒动作，三步缺一不可', energy:'mid',
+                  children:[
+                    { id:'n0a1a1', type:'trigger', text:'对方接受，碰杯，说「没关系」', energy:'', children:[
+                      { id:'n0a1a1a', type:'end', text:'敬酒完成，坐回去，这轮结束', energy:'low', children:[] }
+                    ]},
+                    { id:'n0a1a2', type:'trigger', text:'对方说「喝一口吧，我干了你随意」', energy:'', children:[
+                      { id:'n0a1a2a', type:'response', text:'「真的不行，我[吃药/酒精过敏]，这茶我干了！」然后把茶一口喝完', sub:'用行动表示诚意，不再解释', energy:'mid', children:[
+                        { id:'n0a1a2a1', type:'end', text:'对方通常接受，场面过去', energy:'low', children:[] }
+                      ]}
+                    ]},
+                    { id:'n0a1a3', type:'trigger', text:'对方继续强劝，旁边有人在看', energy:'', children:[
+                      { id:'n0a1a3a', type:'response', text:'请旁边熟悉的人帮你解释「他真的不能喝，吃着药呢」', sub:'第三方解释比自己说可信度高', energy:'low', children:[
+                        { id:'n0a1a3a1', type:'end', text:'被帮解围，场面化解', energy:'low', children:[] }
+                      ]},
+                      { id:'n0a1a3b', type:'response', text:'「我今天确实不行，改天专门请您喝，一定补上」', sub:'给对方一个未来的承诺，保住面子', energy:'mid', children:[
+                        { id:'n0a1a3b1', type:'end', text:'用未来兑现来替代当下，对方通常接受', energy:'mid', children:[] }
+                      ]}
+                    ]}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        { id:'n1', type:'response', text:'【提前预防】落座后主动告知「我今天不能喝酒，以茶代替，大家不要介意」', sub:'最低能耗策略：提前说比临场拒绝省力得多', energy:'low',
+          children:[
+            { id:'n1a', type:'end', text:'全场知情，敬酒时自然会跳过或接受茶杯', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's26', title: '饭局开场寒暄（进包房到上菜）', axis: 0, purposes: [1,2],
+    energy: 'mid', culture: true, desc: '进包房落座到菜上来之间有10-20分钟的空白期，不是沉默，也不是谈正事的时候。',
+    tree: {
+      id:'n0', type:'trigger', text:'进入包房，落座，菜还没上', energy:'',
+      children:[
+        { id:'n1', type:'nonverbal', text:'人还没齐，有人陆续进来', energy:'',
+          children:[
+            { id:'n1a', type:'response', text:'对每个进来的人点头微笑，说「来了」', sub:'最小合规动作，不需要起身或长话', energy:'low',
+              children:[
+                { id:'n1a1', type:'trigger', text:'对方问「路好找吗？」或「堵不堵？」', energy:'', children:[
+                  { id:'n1a1a', type:'response', text:'「还好，导航过来的。你呢？」', sub:'一句回答＋返回，把话还给对方', energy:'low', children:[
+                    { id:'n1a1a1', type:'end', text:'寒暄完成，等下一个话题或等人齐', energy:'low', children:[] }
+                  ]}
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n2', type:'trigger', text:'人齐了，主人说「那我们开始吧」或类似的开场', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'点头，端起茶杯或水杯准备配合', sub:'不需要说话，跟随主人节奏', energy:'low',
+              children:[
+                { id:'n2a1', type:'trigger', text:'主人做介绍「这位是XX，这位是XX」', energy:'', children:[
+                  { id:'n2a1a', type:'response', text:'点头微笑，说「你好」，记住对方的名字或职位', sub:'不需要握手或起立（包房通常不这么做）', energy:'low', children:[
+                    { id:'n2a1a1', type:'end', text:'介绍结束，等主人引导下一步', energy:'low', children:[] }
+                  ]}
+                ]},
+                { id:'n2a2', type:'trigger', text:'主人开始说感谢/敬酒的开场话', energy:'', children:[
+                  { id:'n2a2a', type:'response', text:'端杯，附和「谢谢X，也感谢今天的机会」', sub:'作为客人跟着主人节奏，一句话够了', energy:'low', children:[
+                    { id:'n2a2a1', type:'end', text:'开场礼成，进入正式用餐', energy:'low', children:[] }
+                  ]}
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'unclear', text:'不知道现在应该说话还是等待', sub:'', energy:'',
+          children:[]
+        },
+        { id:'n4', type:'response', text:'给旁边的人倒茶或添水', sub:'沉默时最安全的占位动作，有礼貌且不需要说话', energy:'low',
+          children:[
+            { id:'n4a', type:'end', text:'完成动作，对方点头感谢，沉默被自然填补', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's27', title: '新菜上来，主人介绍菜', axis: 0, purposes: [1,2],
+    energy: 'low', culture: true, desc: '每道菜上来主人说一句，作为客人需要回应，但不知道说什么。',
+    tree: {
+      id:'n0', type:'trigger', text:'服务员端来新菜，主人说「这是这里的招牌菜」', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「这个看起来真好，先请XX尝。」', sub:'赞菜＋把第一筷让给长辈/主宾，一句话完成两件事', energy:'low',
+          children:[
+            { id:'n1a', type:'end', text:'长辈先动筷，对话自然继续', energy:'low', children:[] }
+          ]
+        },
+        { id:'n2', type:'response', text:'「这是什么做法？闻起来很香。」', sub:'问一个问题，把话权还给主人，对方通常很愿意介绍', energy:'low',
+          children:[
+            { id:'n2a', type:'trigger', text:'主人开始介绍做法或来源', energy:'', children:[
+              { id:'n2a1', type:'response', text:'「嗯嗯」「这样啊」（偶尔回应，保持倾听姿态）', sub:'不需要有实质回应，让主人说就好', energy:'low', children:[
+                { id:'n2a1a', type:'end', text:'介绍完，大家开始动筷', energy:'low', children:[] }
+              ]}
+            ]}
+          ]
+        },
+        { id:'n3', type:'response', text:'主人说「特意点的」→ 「今天真的很用心，谢谢X。」', sub:'接住「特意」这个词，不需要其他内容', energy:'low',
+          children:[
+            { id:'n3a', type:'end', text:'主人感到被认可，气氛好', energy:'low', children:[] }
+          ]
+        },
+        { id:'n4', type:'nonverbal', text:'上了一条全鱼，头朝向某人', sub:'鱼头朝向谁，表示对谁的尊重或请谁先动筷', energy:'',
+          children:[
+            { id:'n4a', type:'response', text:'如果鱼头朝向你：「谢谢，那我就不客气了。」然后先动筷', energy:'low', children:[
+              { id:'n4a1', type:'end', text:'接受礼遇，对话继续', energy:'low', children:[] }
+            ]},
+            { id:'n4b', type:'response', text:'如果鱼头朝向长辈：等长辈动筷后再夹', sub:'不越位', energy:'low', children:[
+              { id:'n4b1', type:'end', text:'顺序正确，无需说话', energy:'low', children:[] }
+            ]}
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's28', title: '婚宴/生日宴——礼金与流程', axis: 1, purposes: [0,2],
+    energy: 'mid', culture: true, desc: '这类场合有礼金、敬酒巡回、固定流程，规则和普通饭局不同。',
+    tree: {
+      id:'n0', type:'trigger', text:'收到婚宴或寿宴邀请', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'【去之前】确定礼金金额', sub:'普通朋友同事：200-600 | 好友：600-1000 | 亲戚：按亲疏从800起 | 用吉利数字：666/888/1314，避开含4的数字', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'到场，看到签到台', energy:'', children:[
+              { id:'n1a1', type:'response', text:'在签到台交礼金，写上名字', sub:'交完就可以进场找座位，不需要马上找新人打招呼', energy:'low', children:[
+                { id:'n1a1a', type:'end', text:'礼金交完，找到座位，等开席', energy:'low', children:[] }
+              ]}
+            ]}
+          ]
+        },
+        { id:'n2', type:'trigger', text:'新人或寿星来各桌敬酒巡回', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'起立，端杯，说一两句祝福话', sub:'婚宴：「祝你们百年好合/白头偕老」| 寿宴：「祝您身体健康/福如东海」——选一句就够', energy:'low',
+              children:[
+                { id:'n2a1', type:'end', text:'碰杯，喝多少随意，坐下', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'trigger', text:'宴会结束，要离开', energy:'',
+          children:[
+            { id:'n3a', type:'response', text:'等新人/寿星或家长来送客，或找到他们说告辞', sub:'不要比主人先走，等他们示意结束', energy:'low',
+              children:[
+                { id:'n3a1', type:'response', text:'「今天很开心，恭喜你们/祝您健康，有空再聚。」', sub:'一句话道别，不需要长篇', energy:'low', children:[
+                  { id:'n3a1a', type:'end', text:'主人送到门口，道别完成', energy:'low', children:[] }
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n4', type:'unclear', text:'不确定现在应该主动去找新人/寿星打招呼还是等', sub:'', energy:'', children:[] }
+      ]
+    }
+  },
+  {
+    id: 's29', title: '去别人家吃饭（家宴）', axis: 0, purposes: [0,1],
+    energy: 'mid', culture: true, desc: '在对方家里吃饭，需要处理带什么、要不要帮忙、几点走。',
+    tree: {
+      id:'n0', type:'trigger', text:'被邀请去别人家吃饭', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'【去之前】带一份小礼物', sub:'水果礼盒/点心/茶叶最安全 | 有小孩的家庭加一份糖果或小玩具 | 禁忌：不带钟表、梨、伞（谐音不好）', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'到了，主人说「来就来，还带东西做什么」', energy:'', children:[
+              { id:'n1a1', type:'response', text:'「就是一点心意，您收着。」然后把东西放下', sub:'温和坚持一次，不争，放下就好', energy:'low', children:[
+                { id:'n1a1a', type:'end', text:'礼物交出，进门', energy:'low', children:[] }
+              ]}
+            ]}
+          ]
+        },
+        { id:'n2', type:'trigger', text:'进门后，主人在厨房忙', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'「有什么我可以帮忙的吗？」', sub:'问一句，主人说不用就坐好，不要坚持进厨房', energy:'low',
+              children:[
+                { id:'n2a1', type:'trigger', text:'主人说「不用，你坐」', energy:'', children:[
+                  { id:'n2a1a', type:'end', text:'坐好，和其他人聊或安静等待，都合法', energy:'low', children:[] }
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'trigger', text:'吃完了，主人开始收拾', energy:'',
+          children:[
+            { id:'n3a', type:'response', text:'「我来收拾吧。」主动叠碗或收盘子', sub:'饭后帮收拾比进厨房更合适，也更容易被接受', energy:'low',
+              children:[
+                { id:'n3a1', type:'end', text:'帮了一份力，主人感到被照顾', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n4', type:'trigger', text:'想离开，但不确定时机', energy:'',
+          children:[
+            { id:'n4a', type:'nonverbal', text:'主食/水果上完了，或主人开始倒茶而不是酒', sub:'这是可以准备告辞的信号', energy:'',
+              children:[
+                { id:'n4a1', type:'response', text:'「今天吃得很好，时间不早了，我先回去。下次换我请你们。」', sub:'道别＋下次回请，两步完成', energy:'low',
+                  children:[
+                    { id:'n4a1a', type:'trigger', text:'主人送到门口，继续说话', energy:'', children:[
+                      { id:'n4a1a1', type:'response', text:'门口再说一句「今天谢谢你们，辛苦了」，然后离开', sub:'门口寒暄不超过五分钟，说完就走', energy:'low', children:[
+                        { id:'n4a1a1a', type:'end', text:'家宴结束，体面离场', energy:'low', children:[] }
+                      ]}
+                    ]}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's30', title: '请人吃饭——点菜与买单', axis: 2, purposes: [0,1,3],
+    energy: 'mid', culture: true, desc: '作为请客方，点菜和买单都有隐性规则，处理不当会显得失礼或尴尬。',
+    tree: {
+      id:'n0', type:'trigger', text:'你是请客方，大家落座，服务员拿来菜单', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'先把菜单传给客人看，问「有没有不吃的或忌口的？」', sub:'问禁忌在前，点菜在后，这个顺序很重要', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'客人说「你来点就好」', energy:'', children:[
+              { id:'n1a1', type:'response', text:'点菜，按人数×1.5道热菜，必有一两道"硬菜"（价格高一些的）', sub:'宁多勿少，剩了不丢人，不够才失礼', energy:'low', children:[
+                { id:'n1a1a', type:'response', text:'点完说「我点了这几个，你们看还要加什么」', sub:'主动权在你，但给对方最后确认的机会', energy:'low', children:[
+                  { id:'n1a1a1', type:'end', text:'点菜完成，等上菜', energy:'low', children:[] }
+                ]}
+              ]}
+            ]}
+          ]
+        },
+        { id:'n2', type:'trigger', text:'快吃完了，该买单了', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'趁上厕所或找借口离席，提前到前台把账结了', sub:'不要当着所有人的面抢着买单，提前结账更有面子', energy:'low',
+              children:[
+                { id:'n2a1', type:'end', text:'回座位，大家还在聊，账已经结完了', energy:'low', children:[] }
+              ]
+            },
+            { id:'n2c', type:'trigger', text:'对方买完单说「下次我请」', energy:'', children:[
+              { id:'n2c1', type:'unclear', text:'这是真的还是客套？', sub:'判断标准：对方有没有主动约时间', energy:'', children:[] },
+              { id:'n2c2', type:'response', text:'「好，说定了，你来约时间。」', sub:'接住承诺，把主动权给对方，等对方跟进', energy:'low', children:[
+                { id:'n2c2a', type:'trigger', text:'两三个月内对方没有动静', energy:'', children:[
+                  { id:'n2c2a1', type:'response', text:'「上次你说要请我，最近要不要约一下？」', sub:'主动跟进完全合理，不显得奇怪', energy:'low', children:[
+                    { id:'n2c2a1a', type:'end', text:'约成了，轮流坐庄的节奏建立', energy:'low', children:[] }
+                  ]}
+                ]},
+                { id:'n2c2b', type:'end', text:'等对方来约，这次不用你主动', energy:'low', children:[] }
+              ]}
+            ]},
+            { id:'n2b', type:'trigger', text:'没来得及提前结，对方去抢着买单', energy:'', children:[              
+              { id:'n2b1', type:'response', text:'「今天是我请，下次换你。」温和坚持，同时自己也走向前台', sub:'两个人同时走，谁先到谁付', energy:'mid', children:[
+                { id:'n2b1a', type:'trigger', text:'对方抢先付了', energy:'', children:[
+                  { id:'n2b1a1', type:'response', text:'「谢谢，下次一定我请。」接受，不再争', sub:'争太多反而尴尬，接受并承诺回请', energy:'low', children:[
+                    { id:'n2b1a1a', type:'end', text:'记住这次，下次主动发起回请', energy:'low', children:[] }
+                  ]}
+                ]}
+              ]}
+            ]}
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's31', title: '请长辈/上级吃饭——座位敬酒', axis: 0, purposes: [0,1],
+    energy: 'high', culture: true, desc: '有等级结构的饭局，座位安排、敬酒顺序、买单方式都有规则。',
+    tree: {
+      id:'n0', type:'trigger', text:'大家进入包房，还没落座', energy:'',
+      children:[
+        { id:'n1', type:'nonverbal', text:'长辈/上级站在入口处，没有主动找座位', sub:'他们在等你引位——这是你作为晚辈/下级的任务', energy:'',
+          children:[
+            { id:'n1a', type:'response', text:'「X，您请坐这里。」引导长辈到正对门口的主位', sub:'正对门口的位置是主位，给最尊贵的人', energy:'low',
+              children:[
+                { id:'n1a1', type:'trigger', text:'长辈推辞「哪里都行，你来坐」', energy:'', children:[
+                  { id:'n1a1a', type:'response', text:'「您是今天的主角，这里就是您的位置。」温和坚持一次', sub:'推辞是礼仪动作，坚持一次长辈通常会接受', energy:'low', children:[
+                    { id:'n1a1a1', type:'end', text:'长辈落座，其他人跟着找位子', energy:'low', children:[] }
+                  ]}
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n2', type:'trigger', text:'茶倒好了，准备第一轮敬酒', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'站起来，端杯，先敬在座最高辈分/级别的人', sub:'说「感谢X今天百忙之中来，我先干为敬」，自己先喝', energy:'mid',
+              children:[
+                { id:'n2a1', type:'trigger', text:'长辈说「坐下坐下，不用这么客气」', energy:'', children:[
+                  { id:'n2a1a', type:'response', text:'「应该的，您随意。」然后喝完坐下', sub:'长辈说随意，不代表真的不需要这个动作，把它做完', energy:'low', children:[
+                    { id:'n2a1a1', type:'end', text:'第一轮敬酒完成，饭局正式开始', energy:'low', children:[] }
+                  ]}
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'trigger', text:'饭局快结束，长辈也要买单', energy:'',
+          children:[
+            { id:'n3a', type:'response', text:'「今天是我请，您能来已经是给我面子了，买单的事不用客气。」然后提前去前台结账', sub:'用「给我面子」这个说法，把买单变成对方给你机会，而不是你在抢', energy:'mid',
+              children:[
+                { id:'n3a1', type:'end', text:'账结完，长辈感到被照顾', energy:'mid', children:[] }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's32', title: '倒茶文化——给人倒茶与被人倒茶', axis: 0, purposes: [0,1,2],
+    energy: 'low', culture: true, desc: '倒茶顺序和叩手礼是中餐厅里最基本的非言语礼仪，做对了无声加分。',
+    tree: {
+      id:'n0', type:'trigger', text:'茶壶在桌上，有人的杯子快空了', energy:'',
+      children:[
+        { id:'n1', type:'nonverbal', text:'发现长辈/上级的杯子茶不多了', sub:'这是你需要主动去做的信号', energy:'',
+          children:[
+            { id:'n1a', type:'response', text:'拿起茶壶，先给长辈添茶，再给其他人，最后给自己', sub:'顺序：长辈/上级→其他客人→主人→自己', energy:'low',
+              children:[
+                { id:'n1a1', type:'nonverbal', text:'倒到八分满停下，不倒满', sub:'规则：八分满，倒满是失礼的', energy:'',
+                  children:[
+                    { id:'n1a1a', type:'end', text:'添茶完成，对方叩手致谢或点头', energy:'low', children:[] }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        { id:'n2', type:'trigger', text:'有人给你倒茶', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'用食指和中指轻叩桌面两下（叩手礼）', sub:'意思是「谢谢」，来自古代叩首礼，现在是通用礼节，不需要开口说话', energy:'low',
+              children:[
+                { id:'n2a1', type:'end', text:'对方收到感谢信号，无需语言，对话不被打断', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'unclear', text:'不确定什么时候该主动去拿茶壶', sub:'原则：只要你是在座相对年轻/级别低的，茶壶空了就是你去拿的信号', energy:'', children:[] }
+      ]
+    }
+  },
+  {
+    id: 's33', title: '长辈夹菜给你', axis: 0, purposes: [0,2],
+    energy: 'low', culture: true, desc: '长辈主动夹菜放到你碗里，不知道该怎么回应，或者那道菜你不能/不想吃。',
+    tree: {
+      id:'n0', type:'nonverbal', text:'长辈用筷子夹了一块菜，放进你的碗里', sub:'这是关心和照顾的信号，不是在问你喜不喜欢', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「谢谢X。」点头，把菜留在碗里', sub:'不需要马上吃，接受这个动作比接受这道菜更重要', energy:'low',
+          children:[
+            { id:'n1a', type:'end', text:'长辈满意，气氛继续', energy:'low', children:[] }
+          ]
+        },
+        { id:'n2', type:'trigger', text:'长辈继续夹，一直夹', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'「够了够了，谢谢X，我自己来。」微笑，用手势示意碗已经够了', sub:'说两次「够了」配合手势，通常有效', energy:'low',
+              children:[
+                { id:'n2a1', type:'end', text:'长辈停下，气氛不受影响', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'trigger', text:'夹的是你过敏或不能吃的东西', energy:'',
+          children:[
+            { id:'n3a', type:'response', text:'「谢谢X，我对这个过敏，您吃，我帮自己夹点别的。」', sub:'说过敏是最有效的理由，不需要解释更多', energy:'low',
+              children:[
+                { id:'n3a1', type:'end', text:'长辈理解，把菜收回去或放到自己碗里', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n4', type:'unclear', text:'不确定长辈夹这道菜是不是有特殊含义（比如「这个补」）', sub:'', energy:'', children:[] }
+      ]
+    }
+  },
+  {
+    id: 's34', title: '作为客人被请吃饭——全程应对', axis: 0, purposes: [0,2],
+    energy: 'mid', culture: true, desc: '被请吃饭，需要处理点菜、被夹菜、道别三个关卡，每个都有隐性规则。',
+    tree: {
+      id:'n0', type:'trigger', text:'主人递来菜单说「你来点，随便点」', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'把菜单传回去说「你来点吧，你更熟悉这里」', sub:'作为客人不主动点菜是默认礼仪', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'主人坚持「你点一个你喜欢的」', energy:'', children:[
+              { id:'n1a1', type:'response', text:'点一道价格中等、不是菜单最贵的菜，说「这个看起来不错」', sub:'不点最贵的，也不要为了客气一个都不点', energy:'low', children:[
+                { id:'n1a1a', type:'end', text:'点菜完成，主人接手剩余', energy:'low', children:[] }
+              ]}
+            ]}
+          ]
+        },
+        { id:'n2', type:'trigger', text:'吃到一半，主人问「够不够，要不要再加菜？」', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'「够了够了，已经很丰盛了。」', sub:'客人通常说够了，即使没吃饱也先这样说', energy:'low',
+              children:[
+                { id:'n2a1', type:'end', text:'主人满意，继续吃', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'trigger', text:'饭局快结束，主人站起来示意', energy:'',
+          children:[
+            { id:'n3a', type:'response', text:'「今天谢谢你请客，吃得很好。」等主人先走或主人来送你', sub:'不能比主人先离开，等他们示意', energy:'low',
+              children:[
+                { id:'n3a1', type:'trigger', text:'到门口，主人送你出来', energy:'', children:[
+                  { id:'n3a1a', type:'response', text:'「不用送了，你们留步。下次换我请。」', sub:'道别＋回请承诺，完整', energy:'low', children:[
+                    { id:'n3a1a1', type:'end', text:'体面离场，关系维持', energy:'low', children:[] }
+                  ]}
+                ]}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's35', title: '送礼——给出礼物的全流程', axis: 0, purposes: [0,1],
+    energy: 'mid', culture: true, desc: '送礼时对方说「不用不用」，不知道要不要坚持、坚持几次、怎么放下。',
+    tree: {
+      id:'n0', type:'trigger', text:'你带着礼物拜访，递给对方', energy:'',
+      children:[
+        { id:'n1', type:'trigger', text:'对方说「哎呀你来就来，还带什么东西！」', energy:'',
+          children:[
+            { id:'n1a', type:'response', text:'「就是一点心意，不成敬意，您收着。」继续把礼物递过去', sub:'第一次坚持，温和但不退让', energy:'low',
+              children:[
+                { id:'n1a1', type:'trigger', text:'对方还是推辞「真的不用」', energy:'', children:[
+                  { id:'n1a1a', type:'response', text:'「带都带来了，您就收着吧，我才放心。」', sub:'第二次坚持，用「我才放心」把主动权给对方', energy:'low', children:[
+                    { id:'n1a1a1', type:'trigger', text:'对方第三次推辞', energy:'', children:[
+                      { id:'n1a1a1a', type:'response', text:'把礼物放在桌上或门口，说「就放这里了，您随意」', sub:'第三次不再说，直接放下，不争', energy:'low', children:[
+                        { id:'n1a1a1a1', type:'end', text:'礼物交出，关系无损', energy:'low', children:[] }
+                      ]}
+                    ]},
+                    { id:'n1a1a1b', type:'trigger', text:'对方接受了', energy:'', children:[
+                      { id:'n1a1a1b1', type:'end', text:'礼物交接完成，进入正常拜访', energy:'low', children:[] }
+                    ]}
+                  ]}
+                ]},
+                { id:'n1a2', type:'trigger', text:'对方接受了', energy:'', children:[
+                  { id:'n1a2a', type:'end', text:'礼物交接完成，不需要再提', energy:'low', children:[] }
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n2', type:'unclear', text:'不确定对方的推辞是真的不想要还是礼仪性动作', sub:'原则：推辞1-2次之后接受 = 礼仪性推辞；推辞超过3次且态度明确 = 可能真的不方便收', energy:'', children:[] }
+      ]
+    }
+  },
+  {
+    id: 's36', title: '收礼——接到礼物的全流程', axis: 0, purposes: [0,2],
+    energy: 'low', culture: true, desc: '有人送来礼物，不知道要不要当场打开、怎么道谢才不显得敷衍、后续要不要回礼。',
+    tree: {
+      id:'n0', type:'trigger', text:'对方送来礼物', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「哎，你还带东西来，太客气了。谢谢你特意带来。」', sub:'说具体——「特意带来」比「谢谢」有分量', energy:'low',
+          children:[
+            { id:'n1a', type:'unclear', text:'要不要当场打开？', sub:'', energy:'', children:[] },
+            { id:'n1b', type:'response', text:'【长辈送的/正式场合】不当场打开，放在一边说「我等会慢慢看」', sub:'正式场合不当面打开，避免当场评价礼物', energy:'low',
+              children:[
+                { id:'n1b1', type:'end', text:'礼物收下，之后发消息告知用了/收到', energy:'low', children:[] }
+              ]
+            },
+            { id:'n1c', type:'response', text:'【朋友送的/对方期待你打开】当场打开，表情真实偏正面', sub:'不过度夸张（「天哪太贵了」反而让对方不舒服），说一句具体的「这个颜色很好看」', energy:'low',
+              children:[
+                { id:'n1c1', type:'end', text:'对方感到心意被接收', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n2', type:'trigger', text:'之后用到了那件礼物', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'发一条消息「那个XX我用了，很好用，谢谢你当时带来」', sub:'后续反馈在中国人际关系里很重要，比当场谢谢更有价值', energy:'low',
+              children:[
+                { id:'n2a1', type:'end', text:'对方感到被记得，关系加分', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'trigger', text:'考虑要不要回礼', energy:'',
+          children:[
+            { id:'n3a', type:'response', text:'在下一个合适节点回礼（对方生日/节日/你去拜访时）', sub:'价值大约相当或略高一点，不要差太多也不要贵太多', energy:'low',
+              children:[
+                { id:'n3a1', type:'end', text:'礼尚往来，关系维持平衡', energy:'low', children:[] }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's37', title: '饭桌上不知道该说话还是安静', axis: 1, purposes: [0,1,2],
+    energy: 'mid', culture: true, desc: '多人饭局，不确定什么时候该开口、什么时候跟随就好、被问到时怎么处理。',
+    tree: {
+      id:'n0', type:'trigger', text:'饭局进行中，有人在说话，你不确定自己该做什么', energy:'',
+      children:[
+        { id:'n1', type:'nonverbal', text:'大家都在专注听一个人说话', sub:'这是安静跟随的时机', energy:'',
+          children:[
+            { id:'n1a', type:'response', text:'偶尔点头，表情配合，不主动打断', sub:'守纪律的人给人留下好印象', energy:'low',
+              children:[
+                { id:'n1a1', type:'end', text:'安静在场，完全合法', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n2', type:'nonverbal', text:'长辈/主人举杯示意敬酒', sub:'这是你需要跟着做的信号', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'立刻端杯，跟着举起来', sub:'别人端杯你端杯，不要落后', energy:'low',
+              children:[
+                { id:'n2a1', type:'end', text:'跟随完成，无需说话', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'trigger', text:'有人在聊你不了解的话题，全桌都在谈', energy:'',
+          children:[
+            { id:'n3a', type:'response', text:'安静在场，偶尔点头，不假装懂', sub:'「我不太了解这个，你们继续」完全可以接受', energy:'low',
+              children:[
+                { id:'n3a1', type:'trigger', text:'有人问「你觉得呢？」', energy:'', children:[
+                  { id:'n3a1a', type:'response', text:'「这个我不太懂，你们说，我在学习。」', sub:'真实且得体，不需要硬撑', energy:'low', children:[
+                    { id:'n3a1a1', type:'end', text:'话题回到懂的人，你退回安全位置', energy:'low', children:[] }
+                  ]},
+                  { id:'n3a1b', type:'response', text:'把话题转向食物：「这道菜真的很好吃，我先干为敬。」', sub:'转移话题同时参与了饭局，不需要对原话题表态', energy:'low', children:[
+                    { id:'n3a1b1', type:'end', text:'话题自然转移，你参与了一次', energy:'low', children:[] }
+                  ]}
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n4', type:'trigger', text:'沉默持续超过几秒，没有人说话', energy:'',
+          children:[
+            { id:'n4a', type:'response', text:'给旁边的人倒茶或添水', sub:'占位动作，填补沉默，不需要说话', energy:'low',
+              children:[
+                { id:'n4a1', type:'end', text:'动作完成，沉默被填补，对方点头致谢', energy:'low', children:[] }
+              ]
+            },
+            { id:'n4b', type:'response', text:'说一句评菜：「这个X真的很好，是招牌吗？」', sub:'评菜是饭桌上最安全的主动发言', energy:'low',
+              children:[
+                { id:'n4b1', type:'end', text:'话题启动，主人或其他人会接话', energy:'low', children:[] }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+];
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let state = {
+  scenes: [],
+  rules: [],
+  logs: [],
+  currentEnergy: 'mid',
+  currentSceneId: null,
+  axisFilter: 'all',
+  purposeFilters: [],
+  energyFilter: 'all',
+  cultureFilter: false,
+  expandedNodes: {},
+  verifiedPaths: {},
+  activeVariants: {},
+  addNodeParentId: null,
+  addNodeSceneId: null,
+};
+
+const DEFAULT_CULTURE_RULES = [
+  { id: 'cr1', cat: 'culture', text: '湿毛巾：饭前上的擦手，不能擦脸/嘴/汗。饭后上的才是擦嘴用的。' },
+  { id: 'cr2', cat: 'culture', text: '筷子禁忌：不能竖插在饭碗中（祭奠用法）；不用筷子指人；不要在菜里翻来翻去。' },
+  { id: 'cr3', cat: 'culture', text: '手机礼仪：饭局中接电话要起身走出去；重要饭局把手机翻过来放或调静音。' },
+  { id: 'cr4', cat: 'culture', text: '牙签礼仪：用牙签剔牙时要用手或餐巾掩住嘴，不要大剌剌地当众剔。' },
+  { id: 'cr5', cat: 'culture', text: '转盘礼仪：新菜从主宾开始顺时针取；转动前确认没有人正在夹菜；转速要慢。' },
+  { id: 'cr6', cat: 'culture', text: '点茶：不确定时说「铁观音吧」或「你们这里什么好」是安全答案。正式饭局常见：铁观音/大红袍/普洱。' },
+];
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('social-sim-v2');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state.rules = parsed.rules || [];
+      state.logs = parsed.logs || [];
+      state.verifiedPaths = parsed.verifiedPaths || {};
+      state.customVariants = parsed.customVariants || {};
+      const savedCustom = (parsed.scenes || []).filter(s => s.custom);
+      state.scenes = [...DEFAULT_SCENES, ...savedCustom];
+    } else {
+      state.scenes = [...DEFAULT_SCENES];
+      state.rules = [...DEFAULT_CULTURE_RULES];
+    }
+  } catch(e) {
+    state.scenes = [...DEFAULT_SCENES];
+  }
+}
+
+function saveState() {
+  const toSave = {
+    scenes: state.scenes.filter(s => s.custom),
+    rules: state.rules,
+    logs: state.logs,
+    verifiedPaths: state.verifiedPaths,
+    customVariants: state.customVariants || {},
+  };
+  localStorage.setItem('social-sim-v2', JSON.stringify(toSave));
+}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const tabs = { library: 0, sim: -1, rules: 1 };
+  const idx = tabs[name];
+  if (idx >= 0) document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  if (name === 'library') renderSceneGrid();
+  if (name === 'rules') renderRules();
+}
+
+// ══════════════════════════════════════════════
+// FILTERS
+// ══════════════════════════════════════════════
+function setAxisFilter(val, btn) {
+  state.axisFilter = val;
+  document.querySelectorAll('.filter-panel .filter-btn').forEach(b => {
+    if (['全部场景','熟人一对一','熟人多人','不熟一对一','不熟多人'].some(l => b.textContent.includes(l))) {
+      b.classList.remove('active');
+    }
+  });
+  btn.classList.add('active');
+  renderSceneGrid();
+}
+
+function togglePurposeFilter(idx, el) {
+  el.classList.toggle('active');
+  if (state.purposeFilters.includes(idx)) {
+    state.purposeFilters = state.purposeFilters.filter(x => x !== idx);
+  } else {
+    state.purposeFilters.push(idx);
+  }
+  renderSceneGrid();
+}
+
+function setEnergyFilter(val, btn) {
+  state.energyFilter = val;
+  document.querySelectorAll('#energy-filter-section .filter-btn').forEach(b => {
+    b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderSceneGrid();
+}
+
+function filterScenes() {
+  const query = (document.getElementById('scene-search')?.value || '').trim().toLowerCase();
+  return state.scenes.filter(s => {
+    if (state.axisFilter !== 'all' && s.axis !== state.axisFilter) return false;
+    if (state.purposeFilters.length > 0 && !state.purposeFilters.some(p => s.purposes.includes(p))) return false;
+    if (state.energyFilter !== 'all' && s.energy !== state.energyFilter) return false;
+    if (state.cultureFilter && !s.culture) return false;
+    if (query && !s.title.toLowerCase().includes(query) && !s.desc.toLowerCase().includes(query)) return false;
+    return true;
+  });
+}
+
+function setCultureFilter(val, btn) {
+  state.cultureFilter = val;
+  document.querySelectorAll('#culture-filter-section .filter-btn').forEach(b => {
+    b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderSceneGrid();
+}
+
+// ══════════════════════════════════════════════
+// SCENE GRID
+// ══════════════════════════════════════════════
+function renderSceneGrid() {
+  const grid = document.getElementById('scene-grid');
+  const scenes = filterScenes();
+  if (scenes.length === 0) {
+    grid.innerHTML = '<div class="empty-state">没有符合条件的场景<br>试试调整筛选条件，或新建一个场景。</div>';
+    return;
+  }
+  grid.innerHTML = scenes.map(s => {
+    const tags = s.purposes.map(p =>
+      `<span class="tag ${PURPOSE_CLASS[p]}">${PURPOSE_LABELS[p]}</span>`
+    ).join('');
+    const energyTag = `<span class="tag tag-energy-${s.energy}">${ENERGY_LABELS[s.energy]}</span>`;
+    const axisTag = `<span class="tag tag-axis">${AXIS_LABELS[s.axis]}</span>`;
+    const logCount = state.logs.filter(l => l.sceneId === s.id).length;
+    const logBadge = logCount > 0 ? `<span class="tag" style="background:var(--bg2);color:var(--text3);">记录 ${logCount} 次</span>` : '';
+    const cultureBadge = s.culture ? `<span class="tag" style="background:#EEF3F0;color:#2D6B52;">🏮 文化规则</span>` : '';
+    return `
+      <div class="scene-card ${AXIS_CLASS[s.axis]}" onclick="openScene('${s.id}')">
+        <div class="scene-card-title">${s.title}</div>
+        <div class="scene-card-desc">${s.desc}</div>
+        <div class="scene-card-tags">${axisTag}${energyTag}${tags}${cultureBadge}${logBadge}</div>
+      </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// SIMULATOR
+// ══════════════════════════════════════════════
+function openScene(id) {
+  const scene = state.scenes.find(s => s.id === id);
+  if (!scene) return;
+  state.currentSceneId = id;
+  state.expandedNodes = {};
+  document.getElementById('sim-title').textContent = scene.title;
+  const tagHtml = [
+    `<span class="tag tag-axis">${AXIS_LABELS[scene.axis]}</span>`,
+    `<span class="tag tag-energy-${scene.energy}">${ENERGY_LABELS[scene.energy]}</span>`,
+    ...scene.purposes.map(p => `<span class="tag ${PURPOSE_CLASS[p]}">${PURPOSE_LABELS[p]}</span>`)
+  ].join('');
+  document.getElementById('sim-tags').innerHTML = tagHtml;
+  renderTree();
+  renderLogList();
+  showPage('sim');
+  window.scrollTo(0, 0);
+}
+
+function setEnergy(level, btn) {
+  state.currentEnergy = level;
+  document.querySelectorAll('.energy-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const hints = { high:'显示所有路径，高耗能路径完全可用', mid:'显示所有路径', low:'低耗能路径高亮显示' };
+  document.getElementById('energy-hint').textContent = hints[level];
+  renderTree();
+}
+
+function renderTree_desktop_only(node, sceneId) {
+  const root = document.getElementById('tree-root');
+  root.innerHTML = '';
+  root.appendChild(buildNodeEl(node, sceneId, null));
+}
+
+const NODE_VARIANTS = {
+  '谢谢，上个月买的，当时一眼就喜欢了。': ['谢谢！最近刚买的，挺喜欢的。','谢谢，偶尔买点喜欢的东西。'],
+  '「最近忙不忙？」': ['「你最近怎么样？」','「好久不见，还好吗？」'],
+  '「我还在想……我觉得[一个点]比较关键。」': ['「我在消化一下，我觉得……」','「这个问题我有想法，但需要整理一下。」'],
+  '「听起来你真的很累。」': ['「听起来压力很大。」','「这听起来很消耗。」'],
+  '「我理解你的意思是[复述]——对吗？」': ['「所以你的意思是……我理解对了吗？」','「我想确认一下——你说的是……？」'],
+  '「好，我去忙了，待会见。」': ['「那我先走了。」','「我要去[某处]了，下次聊。」'],
+  '「我还有件事要处理，先走了。」': ['「我有点事，先撤了。」','「有个事要处理，先走。」'],
+  '「这个我还没想清楚。」': ['「我需要再想想。」','「这个问题……我还没有答案。」'],
+  '「你好，我是[名字]，[一句身份说明]。」': ['「你好，我是[名字]。」','「嗨，我是[名字]，很高兴认识你。」'],
+  '「我理解那种感觉。」': ['「听起来确实不容易。」','「嗯，这种情况很难受。」'],
+};
+
+function buildNodeEl(node, sceneId, parentId) {
+  const wrap = document.createElement('div');
+  wrap.className = 'tree-node-wrap';
+  wrap.id = 'wrap-' + node.id;
+
+  const nodeEl = document.createElement('div');
+  const isVerified = state.verifiedPaths[sceneId + ':' + node.id];
+  let cls = 'tree-node ';
+  if (node.type === 'trigger') cls += 'node-trigger';
+  else if (node.type === 'nonverbal') cls += 'node-nonverbal';
+  else if (node.type === 'response') cls += isVerified ? 'node-response verified' : 'node-response';
+  else if (node.type === 'end') cls += 'node-end';
+  else if (node.type === 'unclear') cls += 'node-unclear';
+  if (state.currentEnergy === 'low' && node.energy === 'high') cls += ' node-dimmed';
+  nodeEl.className = cls;
+
+  const labelMap = { trigger:'对方说', nonverbal:'对方的动作', response:'我可以说', end:'结果', unclear:'信号不明' };
+  const activeText = state.activeVariants[node.id] || node.text;
+  let inner = `<div class="node-label">${labelMap[node.type] || ''}</div>`;
+  inner += `<div class="node-text" id="nodetext-${node.id}">${activeText}</div>`;
+  if (node.sub) inner += `<div class="node-sub">${node.sub}</div>`;
+  if (isVerified) inner += `<div class="node-sub" style="color:var(--teal);margin-top:4px;">✓ 已验证有效</div>`;
+  if (node.energy) {
+    const sym = { low:'低耗', mid:'中耗', high:'高耗' };
+    inner += `<div class="node-energy ne-${node.energy}">${sym[node.energy]}</div>`;
+  }
+  nodeEl.innerHTML = inner;
+  nodeEl.onclick = (e) => {
+    if (node.type === 'unclear') { handleNodeClick(node, sceneId); return; }
+    highlightPath(node.id, sceneId);
+  };
+  wrap.appendChild(nodeEl);
+
+  if (node.type === 'unclear') {
+    const panel = document.createElement('div');
+    panel.className = 'unclear-panel';
+    panel.id = 'unclear-' + node.id;
+    panel.innerHTML = `<div class="unclear-panel-title">澄清话术模板 — 直接调用</div>` +
+      CLARIFY_TEMPLATES.map(t => `<div class="clarify-item" onclick="copyToClipboard('${t.replace(/'/g,"\\'")}', this)">${t}</div>`).join('');
+    wrap.appendChild(panel);
+  }
+
+  if (node.type === 'response') {
+    const variantPanel = buildVariantPanel(node, sceneId);
+    wrap.appendChild(variantPanel);
+  }
+
+  const btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;';
+
+  if (node.type !== 'end') {
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-node-btn';
+    addBtn.innerHTML = '＋ 添加分支';
+    addBtn.onclick = (e) => { e.stopPropagation(); openAddNodeModal(node.id, sceneId); };
+    btnRow.appendChild(addBtn);
+  }
+
+  if (node.type === 'response') {
+    const vBtn = document.createElement('button');
+    vBtn.className = 'add-node-btn';
+    if (isVerified) { vBtn.style.color = 'var(--teal)'; vBtn.style.borderColor = 'var(--teal)'; }
+    vBtn.innerHTML = isVerified ? '✓ 已验证' : '☆ 标为已验证';
+    vBtn.onclick = (e) => { e.stopPropagation(); toggleVerified(node.id, sceneId); };
+    btnRow.appendChild(vBtn);
+
+    const varBtn = document.createElement('button');
+    varBtn.className = 'add-node-btn';
+    varBtn.innerHTML = '≡ 换个说法';
+    varBtn.onclick = (e) => {
+      e.stopPropagation();
+      const vp = document.getElementById('variant-' + node.id);
+      if (vp) vp.classList.toggle('open');
+    };
+    btnRow.appendChild(varBtn);
+  }
+
+  wrap.appendChild(btnRow);
+
+  if (node.children && node.children.length > 0) {
+    const expanded = state.expandedNodes[node.id] !== false;
+    if (expanded) {
+      const conn = document.createElement('div');
+      conn.className = 'tree-connector';
+      wrap.appendChild(conn);
+      if (node.children.length === 1) {
+        wrap.appendChild(buildNodeEl(node.children[0], sceneId, node.id));
+      } else {
+        const childRow = document.createElement('div');
+        childRow.className = 'tree-children';
+        node.children.forEach(child => {
+          const cw = document.createElement('div');
+          cw.className = 'tree-child-wrap';
+          cw.appendChild(buildNodeEl(child, sceneId, node.id));
+          childRow.appendChild(cw);
+        });
+        wrap.appendChild(childRow);
+      }
+      const collapseBtn = document.createElement('button');
+      collapseBtn.className = 'node-collapse-btn';
+      collapseBtn.textContent = '▴ 收起';
+      collapseBtn.onclick = (e) => { e.stopPropagation(); state.expandedNodes[node.id] = false; renderTree(); };
+      wrap.appendChild(collapseBtn);
+    } else {
+      const hint = document.createElement('div');
+      hint.className = 'node-collapsed-hint';
+      hint.textContent = `▸ ${node.children.length} 个分支`;
+      hint.onclick = (e) => { e.stopPropagation(); state.expandedNodes[node.id] = true; renderTree(); };
+      wrap.appendChild(hint);
+    }
+  }
+  return wrap;
+}
+
+function buildVariantPanel(node, sceneId) {
+  const panel = document.createElement('div');
+  panel.className = 'variant-panel';
+  panel.id = 'variant-' + node.id;
+  panel.onclick = (e) => e.stopPropagation();
+
+  const presets = NODE_VARIANTS[node.text] || [];
+  const allVariants = [node.text, ...presets];
+
+  const title = document.createElement('div');
+  title.className = 'variant-panel-title';
+  title.textContent = '换个说法（同一个意思）';
+  panel.appendChild(title);
+
+  function renderVariants() {
+    const existing = panel.querySelectorAll('.variant-item');
+    existing.forEach(el => el.remove());
+    const active = state.activeVariants[node.id] || node.text;
+    const customList = state.customVariants && state.customVariants[node.id] || [];
+    const combined = [...new Set([...allVariants, ...customList])];
+    combined.forEach(v => {
+      const item = document.createElement('div');
+      item.className = 'variant-item' + (v === active ? ' active' : '');
+      item.textContent = v;
+      item.onclick = () => {
+        state.activeVariants[node.id] = v;
+        const textEl = document.getElementById('nodetext-' + node.id);
+        if (textEl) textEl.textContent = v;
+        panel.querySelectorAll('.variant-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+      };
+      panel.insertBefore(item, addRow);
+    });
+  }
+
+  const addRow = document.createElement('div');
+  addRow.className = 'variant-add';
+  const input = document.createElement('input');
+  input.className = 'variant-input';
+  input.placeholder = '添加你自己的说法…';
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'variant-save-btn';
+  saveBtn.textContent = '加入';
+  saveBtn.onclick = () => {
+    const val = input.value.trim();
+    if (!val) return;
+    if (!state.customVariants) state.customVariants = {};
+    if (!state.customVariants[node.id]) state.customVariants[node.id] = [];
+    state.customVariants[node.id].push(val);
+    input.value = '';
+    renderVariants();
+  };
+  addRow.appendChild(input);
+  addRow.appendChild(saveBtn);
+  panel.appendChild(addRow);
+
+  renderVariants();
+  return panel;
+}
+
+function handleNodeClick(node, sceneId) {
+  if (node.type === 'unclear') {
+    const panel = document.getElementById('unclear-' + node.id);
+    if (panel) panel.classList.toggle('open');
+  }
+}
+
+function toggleVerified(nodeId, sceneId) {
+  const key = sceneId + ':' + nodeId;
+  state.verifiedPaths[key] = !state.verifiedPaths[key];
+  saveState();
+  renderTree();
+}
+
+function copyToClipboard(text, el) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = el.textContent;
+    el.textContent = '✓ 已复制';
+    el.style.color = 'var(--teal)';
+    setTimeout(() => { el.textContent = orig; el.style.color = ''; }, 1500);
+  });
+}
+
+// ══════════════════════════════════════════════
+// ADD NODE MODAL
+// ══════════════════════════════════════════════
+function openAddNodeModal(parentId, sceneId) {
+  state.addNodeParentId = parentId;
+  state.addNodeSceneId = sceneId;
+  document.getElementById('new-node-text').value = '';
+  document.getElementById('new-node-sub').value = '';
+  document.getElementById('new-node-type').value = 'response';
+  document.getElementById('new-node-energy').value = '';
+  document.getElementById('modal-add-node').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-add-node').classList.remove('open');
+}
+
+function confirmAddNode() {
+  const text = document.getElementById('new-node-text').value.trim();
+  if (!text) return;
+  const type = document.getElementById('new-node-type').value;
+  const sub = document.getElementById('new-node-sub').value.trim();
+  const energy = document.getElementById('new-node-energy').value;
+  const newNode = { id: 'u' + Date.now(), type, text, sub: sub || '', energy, children: [] };
+  const scene = state.scenes.find(s => s.id === state.addNodeSceneId);
+  if (!scene) return;
+  function insertNode(node) {
+    if (node.id === state.addNodeParentId) { node.children.push(newNode); return true; }
+    if (node.children) { for (const c of node.children) if (insertNode(c)) return true; }
+    return false;
+  }
+  insertNode(scene.tree);
+  saveState();
+  closeModal();
+  renderTree();
+}
+
+function toggleUnclearHint() {}
+
+// ══════════════════════════════════════════════
+// ADD SCENE MODAL
+// ══════════════════════════════════════════════
+function openAddScene() {
+  document.getElementById('new-scene-title').value = '';
+  document.getElementById('new-scene-desc').value = '';
+  document.getElementById('new-scene-axis').value = '0';
+  document.getElementById('new-scene-energy').value = 'mid';
+  document.querySelectorAll('#new-scene-purposes .filter-tag').forEach(t => t.classList.remove('active'));
+  document.getElementById('modal-add-scene').classList.add('open');
+}
+
+function closeSceneModal() {
+  document.getElementById('modal-add-scene').classList.remove('open');
+}
+
+function confirmAddScene() {
+  const title = document.getElementById('new-scene-title').value.trim();
+  if (!title) return;
+  const desc = document.getElementById('new-scene-desc').value.trim();
+  const axis = parseInt(document.getElementById('new-scene-axis').value);
+  const energy = document.getElementById('new-scene-energy').value;
+  const purposes = [];
+  document.querySelectorAll('#new-scene-purposes .filter-tag.active').forEach(t => {
+    purposes.push(parseInt(t.getAttribute('data-purpose')));
+  });
+  const newScene = {
+    id: 'sc' + Date.now(), title, desc: desc || '自定义场景',
+    axis, purposes: purposes.length ? purposes : [2], energy, custom: true,
+    tree: {
+      id: 'cn0-' + Date.now(), type: 'trigger',
+      text: '触发情境（点击「添加分支」开始建树）',
+      sub: desc || '', energy: '', children: []
+    }
+  };
+  state.scenes.push(newScene);
+  saveState();
+  closeSceneModal();
+  renderSceneGrid();
+}
+
+// ══════════════════════════════════════════════
+// ENERGY LOG
+// ══════════════════════════════════════════════
+function saveLog() {
+  const energy = document.getElementById('log-energy-select').value;
+  const note = document.getElementById('log-note-input').value.trim();
+  if (!energy) return;
+  const scene = state.scenes.find(s => s.id === state.currentSceneId);
+  const log = {
+    id: Date.now(),
+    sceneId: state.currentSceneId,
+    sceneTitle: scene ? scene.title : '未知场景',
+    energy, note,
+    date: new Date().toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }),
+  };
+  state.logs.unshift(log);
+  if (state.logs.length > 100) state.logs = state.logs.slice(0, 100);
+  saveState();
+  document.getElementById('log-energy-select').value = '';
+  document.getElementById('log-note-input').value = '';
+  renderLogList();
+}
+
+function renderLogList() {
+  const list = document.getElementById('log-list');
+  const sceneLogs = state.logs.filter(l => l.sceneId === state.currentSceneId);
+  if (sceneLogs.length === 0) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0;">还没有记录。走完一条路径后填写，积累真实数据。</div>';
+    return;
+  }
+  const energyLabel = { low:'低 — 轻松', mid:'中 — 有消耗', high:'高 — 很疲惫' };
+  const energyColor = { low:'var(--teal)', mid:'var(--amber)', high:'var(--coral)' };
+  list.innerHTML = sceneLogs.slice(0, 10).map(l => `
+    <div class="log-entry">
+      <span class="log-date">${l.date}</span>
+      <span class="log-note">${l.note || '—'}</span>
+      <span style="font-size:12px;color:${energyColor[l.energy]};font-weight:500;">${energyLabel[l.energy]}</span>
+      <button class="log-del" onclick="deleteLog(${l.id})">✕</button>
+    </div>`).join('');
+}
+
+function deleteLog(id) {
+  state.logs = state.logs.filter(l => l.id !== id);
+  saveState();
+  renderLogList();
+}
+
+// ══════════════════════════════════════════════
+// RULES
+// ══════════════════════════════════════════════
+const CAT_LABELS = {
+  subtext:'潜台词识别', turn:'轮转信号', exit:'退出方式',
+  clarify:'澄清话术', recover:'事后恢复', culture:'文化规则', other:'其他'
+};
+const CAT_COLORS = {
+  subtext:'var(--purple)', turn:'var(--accent)', exit:'var(--teal)',
+  clarify:'var(--amber)', recover:'var(--coral)', culture:'#2D6B52', other:'var(--text3)'
+};
+
+function addRule() {
+  const text = document.getElementById('rule-text-input').value.trim();
+  if (!text) return;
+  const cat = document.getElementById('rule-cat-select').value;
+  state.rules.unshift({ id: Date.now(), cat, text });
+  saveState();
+  document.getElementById('rule-text-input').value = '';
+  renderRules();
+}
+
+function deleteRule(id) {
+  state.rules = state.rules.filter(r => r.id !== id);
+  saveState();
+  renderRules();
+}
+
+function renderRules() {
+  const list = document.getElementById('rules-list');
+  const count = document.getElementById('rules-count');
+  count.textContent = state.rules.length ? `（${state.rules.length} 条）` : '';
+  if (state.rules.length === 0) {
+    list.innerHTML = '<div class="empty-state">还没有规则。<br>走完一个场景后，把发现的规律记录在这里。</div>';
+    return;
+  }
+  const grouped = {};
+  state.rules.forEach(r => {
+    if (!grouped[r.cat]) grouped[r.cat] = [];
+    grouped[r.cat].push(r);
+  });
+  let html = '';
+  for (const [cat, rules] of Object.entries(grouped)) {
+    html += `<div style="font-size:11px;font-weight:600;letter-spacing:0.05em;color:${CAT_COLORS[cat]};margin:12px 0 6px;text-transform:uppercase;">${CAT_LABELS[cat]}</div>`;
+    rules.forEach(r => {
+      html += `<div class="rule-item"><div class="rule-item-text">${r.text}</div><button class="rule-item-del" onclick="deleteRule(${r.id})">✕</button></div>`;
+    });
+  }
+  list.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════
+// PATH HIGHLIGHT
+// ══════════════════════════════════════════════
+function highlightPath(targetId, sceneId) {
+  // Clear existing highlights
+  document.querySelectorAll('.tree-node.path-active').forEach(el => el.classList.remove('path-active'));
+
+  const scene = state.scenes.find(s => s.id === sceneId);
+  if (!scene) return;
+
+  // Find path from root to targetId
+  const path = [];
+  function findPath(node, target, currentPath) {
+    const newPath = [...currentPath, node.id];
+    if (node.id === target) { path.push(...newPath); return true; }
+    if (node.children) {
+      for (const c of node.children) {
+        if (findPath(c, target, newPath)) return true;
+      }
+    }
+    return false;
+  }
+  findPath(scene.tree, targetId, []);
+
+  // Highlight all nodes in path
+  path.forEach(id => {
+    const wrap = document.getElementById('wrap-' + id);
+    if (wrap) {
+      const nodeEl = wrap.querySelector('.tree-node');
+      if (nodeEl) nodeEl.classList.add('path-active');
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
+// AI CHAT
+// ══════════════════════════════════════════════
+let chatHistory = [];
+
+function openChatModal() {
+  const scene = state.scenes.find(s => s.id === state.currentSceneId);
+  if (!scene) return;
+  document.getElementById('chat-scene-name').textContent = scene.title;
+  document.getElementById('chat-hint').textContent =
+    `场景：${scene.desc} — Claude 会扮演「对方」，你来练习回应。`;
+  if (chatHistory.length === 0) initChat(scene);
+  document.getElementById('modal-chat').classList.add('open');
+  setTimeout(() => document.getElementById('chat-input').focus(), 100);
+}
+
+function closeChatModal() {
+  document.getElementById('modal-chat').classList.remove('open');
+}
+
+function resetChat() {
+  chatHistory = [];
+  document.getElementById('chat-messages').innerHTML = '';
+  const scene = state.scenes.find(s => s.id === state.currentSceneId);
+  if (scene) initChat(scene);
+}
+
+function initChat(scene) {
+  chatHistory = [];
+  // Extract trigger text from root node as opening line
+  const openingText = scene.tree.text;
+  addBubble('them', openingText);
+  chatHistory.push({ role: 'assistant', content: openingText });
+}
+
+function addBubble(who, text) {
+  const container = document.getElementById('chat-messages');
+  const bubble = document.createElement('div');
+  bubble.className = `chat-bubble ${who}`;
+  bubble.textContent = text;
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+  return bubble;
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChatMessage();
+  }
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const sendBtn = document.getElementById('chat-send-btn');
+  input.value = '';
+  sendBtn.disabled = true;
+
+  const scene = state.scenes.find(s => s.id === state.currentSceneId);
+  addBubble('me', text);
+  chatHistory.push({ role: 'user', content: text });
+
+  const thinkingBubble = addBubble('thinking', '对方正在想…');
+
+  // Build system prompt
+  const systemPrompt = `你正在扮演一个真实的人，参与一段社交对话练习。场景是：「${scene.title}」。
+背景：${scene.desc}
+你的角色是对方（不是AI）。用自然的中文口语回应，1-3句话，符合场景的语气（${scene.axis <= 1 ? '熟人之间' : '不太熟的人之间'}）。
+不要解释你在做什么，不要用括号描述动作，直接说话。如果对话自然结束，用一句简短的结束语收尾。`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: chatHistory,
+      })
+    });
+
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || '…';
+    thinkingBubble.remove();
+    addBubble('them', reply);
+    chatHistory.push({ role: 'assistant', content: reply });
+  } catch (err) {
+    thinkingBubble.remove();
+    addBubble('thinking', '网络错误，请重试。');
+  }
+
+  sendBtn.disabled = false;
+  input.focus();
+}
+
+// ══════════════════════════════════════════════
+// MOBILE FILTERS
+// ══════════════════════════════════════════════
+function syncMobileSearch(val) {
+  const desktop = document.getElementById('scene-search');
+  if (desktop) desktop.value = val;
+  renderSceneGrid();
+}
+
+function setAxisFilterMobile(val, btn) {
+  state.axisFilter = val;
+  document.querySelectorAll('#mobile-axis-chips .mobile-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // also sync desktop
+  setAxisFilter(val, btn);
+}
+
+function setEnergyFilterMobile(val, btn) {
+  state.energyFilter = val;
+  document.querySelectorAll('#mobile-extra-chips .mobile-chip[id^="mchip-energy"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSceneGrid();
+}
+
+function toggleCultureMobile(btn) {
+  state.cultureFilter = !state.cultureFilter;
+  btn.classList.toggle('culture-active', state.cultureFilter);
+  btn.classList.toggle('active', false);
+  renderSceneGrid();
+}
+
+// ══════════════════════════════════════════════
+// MOBILE STEP FLOW
+// ══════════════════════════════════════════════
+const isMobile = () => window.innerWidth <= 680;
+
+// mobileStepStack: array of { node, selectedChildId }
+let mobileStepStack = [];
+
+function renderTree() {
+  const scene = state.scenes.find(s => s.id === state.currentSceneId);
+  if (!scene) return;
+
+  if (isMobile()) {
+    document.getElementById('tree-container').style.display = 'none';
+    document.getElementById('mobile-step-flow').style.display = 'flex';
+    renderMobileFlow(scene);
+  } else {
+    document.getElementById('tree-container').style.display = '';
+    document.getElementById('mobile-step-flow').style.display = 'none';
+    const root = document.getElementById('tree-root');
+    root.innerHTML = '';
+    root.appendChild(buildNodeEl(scene.tree, scene.id, null));
+  }
+}
+
+function renderMobileFlow(scene) {
+  const container = document.getElementById('mobile-step-flow');
+  container.innerHTML = '';
+  mobileStepStack = [];
+
+  // Start from root
+  buildMobileStep(scene.tree, scene.id, container);
+}
+
+function buildMobileStep(node, sceneId, container) {
+  // Push to stack
+  mobileStepStack.push({ nodeId: node.id });
+
+  const layer = document.createElement('div');
+  layer.className = 'step-layer';
+  layer.id = 'step-layer-' + node.id;
+
+  // ── Context card (show what's happening) ──
+  const ctx = document.createElement('div');
+  ctx.className = `step-context type-${node.type}`;
+  const ctxTypeLabel = { trigger:'对方说', nonverbal:'对方的动作', response:'我选择了', end:'结果', unclear:'信号不明' };
+  ctx.innerHTML = `<div><div class="step-context-label">${ctxTypeLabel[node.type] || ''}</div><div style="font-size:14px;font-weight:500;color:var(--text);line-height:1.5;">${state.activeVariants[node.id] || node.text}</div>${node.sub ? `<div style="font-size:12px;margin-top:4px;opacity:0.8;">${node.sub}</div>` : ''}</div>`;
+  layer.appendChild(ctx);
+
+  // ── Action buttons for response nodes ──
+  if (node.type === 'response') {
+    const isVerified = state.verifiedPaths[sceneId + ':' + node.id];
+    const actions = document.createElement('div');
+    actions.className = 'step-actions';
+
+    const vBtn = document.createElement('button');
+    vBtn.className = 'step-action-btn' + (isVerified ? ' verified' : '');
+    vBtn.innerHTML = isVerified ? '✓ 已验证有效' : '☆ 标为已验证';
+    vBtn.onclick = () => { toggleVerified(node.id, sceneId); renderTree(); };
+    actions.appendChild(vBtn);
+
+    // Variants
+    const presets = NODE_VARIANTS[node.text] || [];
+    const customList = (state.customVariants && state.customVariants[node.id]) || [];
+    const allV = [...new Set([node.text, ...presets, ...customList])];
+    if (allV.length > 1) {
+      const varBtn = document.createElement('button');
+      varBtn.className = 'step-action-btn';
+      varBtn.innerHTML = '≡ 换个说法';
+      varBtn.onclick = () => {
+        const existing = document.getElementById('varsheet-' + node.id);
+        if (existing) { existing.remove(); return; }
+        const sheet = buildMobileVariantSheet(node, sceneId, allV);
+        actions.parentNode.insertBefore(sheet, actions.nextSibling);
+      };
+      actions.appendChild(varBtn);
+    }
+
+    layer.appendChild(actions);
+  }
+
+  // ── Unclear: show clarify templates ──
+  if (node.type === 'unclear') {
+    const cl = document.createElement('div');
+    cl.className = 'step-clarify-list';
+    cl.innerHTML = `<div class="step-clarify-title">澄清话术 — 点击复制</div>` +
+      CLARIFY_TEMPLATES.map(t =>
+        `<div class="step-clarify-item" onclick="copyToClipboard('${t.replace(/'/g,"\\'")}', this)">${t}</div>`
+      ).join('');
+    layer.appendChild(cl);
+  }
+
+  // ── Children / options ──
+  if (!node.children || node.children.length === 0) {
+    // End state
+    const endCard = document.createElement('div');
+    endCard.className = 'step-end-card';
+    endCard.innerHTML = `<span>✓</span><span>对话路径完成</span>`;
+    layer.appendChild(endCard);
+
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'step-reset-btn';
+    resetBtn.innerHTML = '↺ 从头再走一遍';
+    resetBtn.onclick = () => renderMobileFlow(state.scenes.find(s => s.id === sceneId));
+    layer.appendChild(resetBtn);
+
+    container.appendChild(layer);
+    return;
+  }
+
+  // Multiple or single children → show as options
+  const optLabel = document.createElement('div');
+  optLabel.className = 'step-options-label';
+  const labelByType = { trigger:'接下来可能发生', nonverbal:'非言语信号', response:'我可以怎么回应', end:'结果', unclear:'情况不明' };
+  const nextTypes = [...new Set(node.children.map(c => c.type))];
+  optLabel.textContent = nextTypes.length === 1 ? (labelByType[nextTypes[0]] || '接下来') : '接下来';
+  layer.appendChild(optLabel);
+
+  const divider = document.createElement('div');
+  divider.className = 'step-divider';
+  divider.textContent = node.children.length > 1 ? `${node.children.length} 个选项` : '';
+  layer.appendChild(divider);
+
+  node.children.forEach(child => {
+    const isVerifiedChild = state.verifiedPaths[sceneId + ':' + child.id];
+    const isDimmed = state.currentEnergy === 'low' && child.energy === 'high';
+
+    const opt = document.createElement('button');
+    let optCls = `step-option type-${child.type}`;
+    if (isVerifiedChild) optCls += ' verified';
+    if (isDimmed) optCls += ' dimmed';
+    opt.className = optCls;
+
+    const icons = { trigger:'💬', nonverbal:'👁', response:'🗣', end:'✓', unclear:'❓' };
+    const optLabels = { trigger:'对方说', nonverbal:'对方的动作', response:'我可以说', end:'结果', unclear:'信号不明' };
+
+    const activeText = state.activeVariants[child.id] || child.text;
+    const energyBadge = child.energy ? `<span class="step-badge step-badge-energy-${child.energy}">${{low:'低耗',mid:'中耗',high:'高耗'}[child.energy]}</span>` : '';
+    const verifiedBadge = isVerifiedChild ? `<span class="step-badge step-badge-verified">✓ 已验证</span>` : '';
+    const hasSub = child.sub ? `<div class="step-option-sub">${child.sub}</div>` : '';
+    const hasBadges = (energyBadge || verifiedBadge) ? `<div class="step-option-badges">${verifiedBadge}${energyBadge}</div>` : '';
+
+    opt.innerHTML = `
+      <span class="step-option-icon">${icons[child.type] || '→'}</span>
+      <span class="step-option-body">
+        <span class="step-option-label">${optLabels[child.type] || ''}</span>
+        <span class="step-option-text">${activeText}</span>
+        ${hasSub}
+        ${hasBadges}
+      </span>
+      ${child.type !== 'end' && child.children && child.children.length > 0 ? '<span class="step-chevron">›</span>' : ''}
+    `;
+
+    opt.onclick = () => {
+      // Remove all layers after this one
+      const existingNext = document.getElementById('step-layer-' + child.id);
+      if (existingNext) {
+        // If already expanded, collapse
+        let toRemove = existingNext;
+        while (toRemove) {
+          const next = toRemove.nextSibling;
+          toRemove.remove();
+          toRemove = next;
+        }
+        opt.classList.remove('selected');
+        return;
+      }
+
+      // Deselect siblings
+      layer.querySelectorAll('.step-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+
+      // Scroll to show new content
+      setTimeout(() => {
+        const newLayer = document.getElementById('step-layer-' + child.id);
+        if (newLayer) newLayer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+
+      buildMobileStep(child, sceneId, container);
+    };
+
+    layer.appendChild(opt);
+  });
+
+  container.appendChild(layer);
+}
+
+function buildMobileVariantSheet(node, sceneId, allVariants) {
+  const sheet = document.createElement('div');
+  sheet.className = 'step-variant-sheet';
+  sheet.id = 'varsheet-' + node.id;
+
+  const title = document.createElement('div');
+  title.className = 'step-variant-title';
+  title.textContent = '换个说法';
+  sheet.appendChild(title);
+
+  const active = state.activeVariants[node.id] || node.text;
+  allVariants.forEach(v => {
+    const item = document.createElement('div');
+    item.className = 'step-variant-item' + (v === active ? ' active' : '');
+    item.textContent = v;
+    item.onclick = () => {
+      state.activeVariants[node.id] = v;
+      // Update the context card text
+      const ctx = document.querySelector(`#step-layer-${node.id} .step-context [style]`);
+      // Re-render the whole flow to update
+      const scene = state.scenes.find(s => s.id === sceneId);
+      sheet.remove();
+      // Find which step this is and update display
+      const ctxDiv = document.querySelector(`#step-layer-${node.id} .step-context div div:last-child`);
+      if (ctxDiv && ctxDiv.style.fontWeight === '500') ctxDiv.textContent = v;
+      // Update the context bold text
+      const ctxNode = document.querySelector(`#step-layer-${node.id} .step-context`);
+      if (ctxNode) {
+        const textEl = ctxNode.querySelector('[style*="font-weight"]');
+        if (textEl) textEl.textContent = v;
+      }
+    };
+    sheet.appendChild(item);
+  });
+
+  // Add custom variant
+  const addRow = document.createElement('div');
+  addRow.style.cssText = 'display:flex;gap:6px;margin-top:8px;';
+  const inp = document.createElement('input');
+  inp.className = 'variant-input';
+  inp.placeholder = '写你自己的说法…';
+  inp.style.cssText = 'flex:1;padding:8px 10px;border:1px solid #AFA9EC;border-radius:6px;font-size:13px;background:var(--card);color:var(--text);font-family:var(--font-ui);outline:none;';
+  const saveB = document.createElement('button');
+  saveB.className = 'variant-save-btn';
+  saveB.textContent = '加入';
+  saveB.style.cssText = 'padding:8px 12px;background:var(--purple);color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer;';
+  saveB.onclick = () => {
+    const val = inp.value.trim();
+    if (!val) return;
+    if (!state.customVariants) state.customVariants = {};
+    if (!state.customVariants[node.id]) state.customVariants[node.id] = [];
+    state.customVariants[node.id].push(val);
+    inp.value = '';
+    allVariants.push(val);
+    const newItem = document.createElement('div');
+    newItem.className = 'step-variant-item';
+    newItem.textContent = val;
+    newItem.onclick = () => { state.activeVariants[node.id] = val; sheet.remove(); };
+    sheet.insertBefore(newItem, addRow);
+    saveState();
+  };
+  addRow.appendChild(inp);
+  addRow.appendChild(saveB);
+  sheet.appendChild(addRow);
+
+  return sheet;
+}
+
+// Re-render on resize (desktop ↔ mobile switch)
+window.addEventListener('resize', () => {
+  const scene = state.scenes.find(s => s.id === state.currentSceneId);
+  if (scene && document.getElementById('page-sim').classList.contains('active')) {
+    renderTree();
+  }
+});
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+loadState();
+renderSceneGrid();
+
+function checkPw() {
+  if (document.getElementById('lock-input').value === '0202') {
+    document.getElementById('lock-screen').style.display = 'none';
+  } else {
+    document.getElementById('lock-err').textContent = '密码不对';
+    document.getElementById('lock-input').value = '';
+  }
+}
+</script>
+</body>
+</html>
