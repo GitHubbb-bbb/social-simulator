@@ -608,6 +608,99 @@
     width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0;
   }
 
+  /* search */
+  .search-input {
+    width: 100%;
+    padding: 7px 10px 7px 30px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    font-size: 13px; color: var(--text);
+    font-family: var(--font-ui);
+    transition: border-color 0.12s;
+    margin-bottom: 12px;
+  }
+  .search-input:focus { outline: none; border-color: var(--accent); }
+  .search-wrap { position: relative; }
+  .search-icon {
+    position: absolute; left: 8px; top: 50%; transform: translateY(-60%);
+    font-size: 13px; color: var(--text3); pointer-events: none;
+  }
+
+  /* path highlight */
+  .tree-node.path-active {
+    outline: 2.5px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px var(--accent-bg);
+  }
+  .tree-connector.path-active,
+  .tree-connector-h.path-active {
+    background: var(--accent);
+  }
+
+  /* AI chat modal */
+  .chat-modal {
+    width: 560px; max-width: 95vw;
+    max-height: 80vh;
+    display: flex; flex-direction: column;
+  }
+  .chat-messages {
+    flex: 1; overflow-y: auto;
+    padding: 12px 0;
+    display: flex; flex-direction: column; gap: 10px;
+    min-height: 200px; max-height: 380px;
+  }
+  .chat-bubble {
+    max-width: 80%;
+    padding: 9px 13px;
+    border-radius: 12px;
+    font-size: 13px; line-height: 1.55;
+  }
+  .chat-bubble.them {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    align-self: flex-start;
+    border-bottom-left-radius: 3px;
+    color: var(--text);
+  }
+  .chat-bubble.me {
+    background: var(--accent);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 3px;
+  }
+  .chat-bubble.thinking {
+    background: var(--bg2); border: 1px dashed var(--border2);
+    color: var(--text3); font-style: italic;
+    align-self: flex-start;
+  }
+  .chat-input-row {
+    display: flex; gap: 8px; margin-top: 12px;
+    border-top: 1px solid var(--border); padding-top: 12px;
+  }
+  .chat-input {
+    flex: 1; padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-family: var(--font-ui);
+    color: var(--text); background: var(--bg);
+    resize: none; min-height: 38px; max-height: 100px;
+  }
+  .chat-input:focus { outline: none; border-color: var(--accent); }
+  .chat-send-btn {
+    padding: 8px 16px;
+    background: var(--accent); color: white;
+    border: none; border-radius: var(--radius-sm);
+    font-size: 13px; cursor: pointer;
+    white-space: nowrap; align-self: flex-end;
+  }
+  .chat-send-btn:hover { opacity: 0.88; }
+  .chat-send-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .chat-hint {
+    font-size: 11px; color: var(--text3);
+    margin-bottom: 8px; line-height: 1.5;
+  }
+
   /* scroll hint */
   .scroll-hint {
     text-align: center; font-size: 11px; color: var(--text3);
@@ -648,6 +741,13 @@
   <div class="library-layout">
     <div class="filter-panel">
       <div class="filter-section">
+        <span class="filter-label">搜索</span>
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" id="scene-search" type="text" placeholder="关键词，如「敬酒」…" oninput="renderSceneGrid()">
+        </div>
+      </div>
+      <div class="filter-section">
         <span class="filter-label">熟悉程度</span>
         <button class="filter-btn active" onclick="setAxisFilter('all', this)">全部场景</button>
         <button class="filter-btn" onclick="setAxisFilter(0, this)">熟人一对一</button>
@@ -664,12 +764,17 @@
           <span class="filter-tag" onclick="togglePurposeFilter(3, this)">主动发起</span>
         </div>
       </div>
-      <div class="filter-section">
+      <div class="filter-section" id="energy-filter-section">
         <span class="filter-label">能量消耗</span>
         <button class="filter-btn" onclick="setEnergyFilter('all', this)">全部</button>
         <button class="filter-btn" onclick="setEnergyFilter('low', this)">低耗能</button>
         <button class="filter-btn" onclick="setEnergyFilter('mid', this)">中等</button>
         <button class="filter-btn" onclick="setEnergyFilter('high', this)">高耗能</button>
+      </div>
+      <div class="filter-section" id="culture-filter-section">
+        <span class="filter-label">标签</span>
+        <button class="filter-btn active" onclick="setCultureFilter(false, this)">全部</button>
+        <button class="filter-btn" onclick="setCultureFilter(true, this)">🏮 文化规则</button>
       </div>
       <div class="divider"></div>
       <button class="filter-btn" onclick="openAddScene()" style="color:var(--accent);font-weight:500;">＋ 新建场景</button>
@@ -684,6 +789,7 @@
     <button class="back-btn" onclick="showPage('library')">← 返回</button>
     <div class="sim-title" id="sim-title">场景名称</div>
     <div class="sim-tags" id="sim-tags"></div>
+    <button class="back-btn" onclick="openChatModal()" style="margin-left:8px;background:var(--purple-bg);border-color:#AFA9EC;color:var(--purple);">💬 即兴练习</button>
   </div>
 
   <div class="energy-bar">
@@ -749,6 +855,7 @@
           <option value="exit">退出方式</option>
           <option value="clarify">澄清话术</option>
           <option value="recover">事后恢复</option>
+          <option value="culture">文化规则</option>
           <option value="other">其他</option>
         </select>
       </div>
@@ -844,6 +951,23 @@
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeSceneModal()">取消</button>
       <button class="btn-primary" onclick="confirmAddScene()">创建场景</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AI CHAT MODAL ══ -->
+<div class="modal-overlay" id="modal-chat">
+  <div class="modal chat-modal">
+    <div class="modal-title">💬 即兴对话练习 — <span id="chat-scene-name" style="color:var(--text2);font-weight:400;font-size:14px;"></span></div>
+    <div class="chat-hint" id="chat-hint"></div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="chat-input" placeholder="输入你的回应…（Enter 发送，Shift+Enter 换行）" rows="1" onkeydown="handleChatKey(event)"></textarea>
+      <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">发送</button>
+    </div>
+    <div class="modal-actions" style="margin-top:8px;">
+      <button class="btn-secondary" onclick="resetChat()">重新开始</button>
+      <button class="btn-secondary" onclick="closeChatModal()">关闭</button>
     </div>
   </div>
 </div>
@@ -1490,7 +1614,559 @@ const DEFAULT_SCENES = [
         { id:'n2', type:'unclear', text:'不确定大家是真的要走了还是只是说说', sub:'', energy:'', children:[] },
         { id:'n3', type:'response', text:'观察最先离开的人怎么道别，复制同样的结构', sub:'系统化提取：看别人做什么，照做', energy:'low',
           children:[
-            { id:'n3a', type:'end', text:'利用他人示范降低决策成本', energy:'low', children:[] }
+        { id:'n3a', type:'end', text:'利用他人示范降低决策成本', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's25', title: '被敬酒但不喝酒', axis: 0, purposes: [1,2],
+    energy: 'high', culture: true, desc: '被当众敬酒，不喝酒或不能喝，需要即时处理，担心失礼或被强劝。',
+    tree: {
+      id:'n0', type:'trigger', text:'有人端起杯子走向你，准备敬酒', energy:'',
+      children:[
+        { id:'n0a', type:'nonverbal', text:'对方眼神看向你，举杯示意', sub:'信号：你是这轮敬酒的目标', energy:'',
+          children:[
+            { id:'n0a1', type:'response', text:'起立，端起茶杯或饮料杯，微笑迎向对方', sub:'不需要解释，先做动作，再开口', energy:'low',
+              children:[
+                { id:'n0a1a', type:'response', text:'「我身体原因不能喝酒，以茶代酒，心意是一样的——敬您！」', sub:'提原因+表心意+完成敬酒动作，三步缺一不可', energy:'mid',
+                  children:[
+                    { id:'n0a1a1', type:'trigger', text:'对方接受，碰杯，说「没关系」', energy:'', children:[
+                      { id:'n0a1a1a', type:'end', text:'敬酒完成，坐回去，这轮结束', energy:'low', children:[] }
+                    ]},
+                    { id:'n0a1a2', type:'trigger', text:'对方说「喝一口吧，我干了你随意」', energy:'', children:[
+                      { id:'n0a1a2a', type:'response', text:'「真的不行，我[吃药/酒精过敏]，这茶我干了！」然后把茶一口喝完', sub:'用行动表示诚意，不再解释', energy:'mid', children:[
+                        { id:'n0a1a2a1', type:'end', text:'对方通常接受，场面过去', energy:'low', children:[] }
+                      ]}
+                    ]},
+                    { id:'n0a1a3', type:'trigger', text:'对方继续强劝，旁边有人在看', energy:'', children:[
+                      { id:'n0a1a3a', type:'response', text:'请旁边熟悉的人帮你解释「他真的不能喝，吃着药呢」', sub:'第三方解释比自己说可信度高', energy:'low', children:[
+                        { id:'n0a1a3a1', type:'end', text:'被帮解围，场面化解', energy:'low', children:[] }
+                      ]},
+                      { id:'n0a1a3b', type:'response', text:'「我今天确实不行，改天专门请您喝，一定补上」', sub:'给对方一个未来的承诺，保住面子', energy:'mid', children:[
+                        { id:'n0a1a3b1', type:'end', text:'用未来兑现来替代当下，对方通常接受', energy:'mid', children:[] }
+                      ]}
+                    ]}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        { id:'n1', type:'response', text:'【提前预防】落座后主动告知「我今天不能喝酒，以茶代替，大家不要介意」', sub:'最低能耗策略：提前说比临场拒绝省力得多', energy:'low',
+          children:[
+            { id:'n1a', type:'end', text:'全场知情，敬酒时自然会跳过或接受茶杯', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's26', title: '饭局开场寒暄（进包房到上菜）', axis: 0, purposes: [1,2],
+    energy: 'mid', culture: true, desc: '进包房落座到菜上来之间有10-20分钟的空白期，不是沉默，也不是谈正事的时候。',
+    tree: {
+      id:'n0', type:'trigger', text:'进入包房，落座，菜还没上', energy:'',
+      children:[
+        { id:'n1', type:'nonverbal', text:'人还没齐，有人陆续进来', energy:'',
+          children:[
+            { id:'n1a', type:'response', text:'对每个进来的人点头微笑，说「来了」', sub:'最小合规动作，不需要起身或长话', energy:'low',
+              children:[
+                { id:'n1a1', type:'trigger', text:'对方问「路好找吗？」或「堵不堵？」', energy:'', children:[
+                  { id:'n1a1a', type:'response', text:'「还好，导航过来的。你呢？」', sub:'一句回答＋返回，把话还给对方', energy:'low', children:[
+                    { id:'n1a1a1', type:'end', text:'寒暄完成，等下一个话题或等人齐', energy:'low', children:[] }
+                  ]}
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n2', type:'trigger', text:'人齐了，主人说「那我们开始吧」或类似的开场', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'点头，端起茶杯或水杯准备配合', sub:'不需要说话，跟随主人节奏', energy:'low',
+              children:[
+                { id:'n2a1', type:'trigger', text:'主人做介绍「这位是XX，这位是XX」', energy:'', children:[
+                  { id:'n2a1a', type:'response', text:'点头微笑，说「你好」，记住对方的名字或职位', sub:'不需要握手或起立（包房通常不这么做）', energy:'low', children:[
+                    { id:'n2a1a1', type:'end', text:'介绍结束，等主人引导下一步', energy:'low', children:[] }
+                  ]}
+                ]},
+                { id:'n2a2', type:'trigger', text:'主人开始说感谢/敬酒的开场话', energy:'', children:[
+                  { id:'n2a2a', type:'response', text:'端杯，附和「谢谢X，也感谢今天的机会」', sub:'作为客人跟着主人节奏，一句话够了', energy:'low', children:[
+                    { id:'n2a2a1', type:'end', text:'开场礼成，进入正式用餐', energy:'low', children:[] }
+                  ]}
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'unclear', text:'不知道现在应该说话还是等待', sub:'', energy:'',
+          children:[]
+        },
+        { id:'n4', type:'response', text:'给旁边的人倒茶或添水', sub:'沉默时最安全的占位动作，有礼貌且不需要说话', energy:'low',
+          children:[
+            { id:'n4a', type:'end', text:'完成动作，对方点头感谢，沉默被自然填补', energy:'low', children:[] }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's27', title: '新菜上来，主人介绍菜', axis: 0, purposes: [1,2],
+    energy: 'low', culture: true, desc: '每道菜上来主人说一句，作为客人需要回应，但不知道说什么。',
+    tree: {
+      id:'n0', type:'trigger', text:'服务员端来新菜，主人说「这是这里的招牌菜」', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「这个看起来真好，先请XX尝。」', sub:'赞菜＋把第一筷让给长辈/主宾，一句话完成两件事', energy:'low',
+          children:[
+            { id:'n1a', type:'end', text:'长辈先动筷，对话自然继续', energy:'low', children:[] }
+          ]
+        },
+        { id:'n2', type:'response', text:'「这是什么做法？闻起来很香。」', sub:'问一个问题，把话权还给主人，对方通常很愿意介绍', energy:'low',
+          children:[
+            { id:'n2a', type:'trigger', text:'主人开始介绍做法或来源', energy:'', children:[
+              { id:'n2a1', type:'response', text:'「嗯嗯」「这样啊」（偶尔回应，保持倾听姿态）', sub:'不需要有实质回应，让主人说就好', energy:'low', children:[
+                { id:'n2a1a', type:'end', text:'介绍完，大家开始动筷', energy:'low', children:[] }
+              ]}
+            ]}
+          ]
+        },
+        { id:'n3', type:'response', text:'主人说「特意点的」→ 「今天真的很用心，谢谢X。」', sub:'接住「特意」这个词，不需要其他内容', energy:'low',
+          children:[
+            { id:'n3a', type:'end', text:'主人感到被认可，气氛好', energy:'low', children:[] }
+          ]
+        },
+        { id:'n4', type:'nonverbal', text:'上了一条全鱼，头朝向某人', sub:'鱼头朝向谁，表示对谁的尊重或请谁先动筷', energy:'',
+          children:[
+            { id:'n4a', type:'response', text:'如果鱼头朝向你：「谢谢，那我就不客气了。」然后先动筷', energy:'low', children:[
+              { id:'n4a1', type:'end', text:'接受礼遇，对话继续', energy:'low', children:[] }
+            ]},
+            { id:'n4b', type:'response', text:'如果鱼头朝向长辈：等长辈动筷后再夹', sub:'不越位', energy:'low', children:[
+              { id:'n4b1', type:'end', text:'顺序正确，无需说话', energy:'low', children:[] }
+            ]}
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's28', title: '婚宴/生日宴——礼金与流程', axis: 1, purposes: [0,2],
+    energy: 'mid', culture: true, desc: '这类场合有礼金、敬酒巡回、固定流程，规则和普通饭局不同。',
+    tree: {
+      id:'n0', type:'trigger', text:'收到婚宴或寿宴邀请', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'【去之前】确定礼金金额', sub:'普通朋友同事：200-600 | 好友：600-1000 | 亲戚：按亲疏从800起 | 用吉利数字：666/888/1314，避开含4的数字', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'到场，看到签到台', energy:'', children:[
+              { id:'n1a1', type:'response', text:'在签到台交礼金，写上名字', sub:'交完就可以进场找座位，不需要马上找新人打招呼', energy:'low', children:[
+                { id:'n1a1a', type:'end', text:'礼金交完，找到座位，等开席', energy:'low', children:[] }
+              ]}
+            ]}
+          ]
+        },
+        { id:'n2', type:'trigger', text:'新人或寿星来各桌敬酒巡回', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'起立，端杯，说一两句祝福话', sub:'婚宴：「祝你们百年好合/白头偕老」| 寿宴：「祝您身体健康/福如东海」——选一句就够', energy:'low',
+              children:[
+                { id:'n2a1', type:'end', text:'碰杯，喝多少随意，坐下', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'trigger', text:'宴会结束，要离开', energy:'',
+          children:[
+            { id:'n3a', type:'response', text:'等新人/寿星或家长来送客，或找到他们说告辞', sub:'不要比主人先走，等他们示意结束', energy:'low',
+              children:[
+                { id:'n3a1', type:'response', text:'「今天很开心，恭喜你们/祝您健康，有空再聚。」', sub:'一句话道别，不需要长篇', energy:'low', children:[
+                  { id:'n3a1a', type:'end', text:'主人送到门口，道别完成', energy:'low', children:[] }
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n4', type:'unclear', text:'不确定现在应该主动去找新人/寿星打招呼还是等', sub:'', energy:'', children:[] }
+      ]
+    }
+  },
+  {
+    id: 's29', title: '去别人家吃饭（家宴）', axis: 0, purposes: [0,1],
+    energy: 'mid', culture: true, desc: '在对方家里吃饭，需要处理带什么、要不要帮忙、几点走。',
+    tree: {
+      id:'n0', type:'trigger', text:'被邀请去别人家吃饭', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'【去之前】带一份小礼物', sub:'水果礼盒/点心/茶叶最安全 | 有小孩的家庭加一份糖果或小玩具 | 禁忌：不带钟表、梨、伞（谐音不好）', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'到了，主人说「来就来，还带东西做什么」', energy:'', children:[
+              { id:'n1a1', type:'response', text:'「就是一点心意，您收着。」然后把东西放下', sub:'温和坚持一次，不争，放下就好', energy:'low', children:[
+                { id:'n1a1a', type:'end', text:'礼物交出，进门', energy:'low', children:[] }
+              ]}
+            ]}
+          ]
+        },
+        { id:'n2', type:'trigger', text:'进门后，主人在厨房忙', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'「有什么我可以帮忙的吗？」', sub:'问一句，主人说不用就坐好，不要坚持进厨房', energy:'low',
+              children:[
+                { id:'n2a1', type:'trigger', text:'主人说「不用，你坐」', energy:'', children:[
+                  { id:'n2a1a', type:'end', text:'坐好，和其他人聊或安静等待，都合法', energy:'low', children:[] }
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'trigger', text:'吃完了，主人开始收拾', energy:'',
+          children:[
+            { id:'n3a', type:'response', text:'「我来收拾吧。」主动叠碗或收盘子', sub:'饭后帮收拾比进厨房更合适，也更容易被接受', energy:'low',
+              children:[
+                { id:'n3a1', type:'end', text:'帮了一份力，主人感到被照顾', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n4', type:'trigger', text:'想离开，但不确定时机', energy:'',
+          children:[
+            { id:'n4a', type:'nonverbal', text:'主食/水果上完了，或主人开始倒茶而不是酒', sub:'这是可以准备告辞的信号', energy:'',
+              children:[
+                { id:'n4a1', type:'response', text:'「今天吃得很好，时间不早了，我先回去。下次换我请你们。」', sub:'道别＋下次回请，两步完成', energy:'low',
+                  children:[
+                    { id:'n4a1a', type:'trigger', text:'主人送到门口，继续说话', energy:'', children:[
+                      { id:'n4a1a1', type:'response', text:'门口再说一句「今天谢谢你们，辛苦了」，然后离开', sub:'门口寒暄不超过五分钟，说完就走', energy:'low', children:[
+                        { id:'n4a1a1a', type:'end', text:'家宴结束，体面离场', energy:'low', children:[] }
+                      ]}
+                    ]}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's30', title: '请人吃饭——点菜与买单', axis: 2, purposes: [0,1,3],
+    energy: 'mid', culture: true, desc: '作为请客方，点菜和买单都有隐性规则，处理不当会显得失礼或尴尬。',
+    tree: {
+      id:'n0', type:'trigger', text:'你是请客方，大家落座，服务员拿来菜单', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'先把菜单传给客人看，问「有没有不吃的或忌口的？」', sub:'问禁忌在前，点菜在后，这个顺序很重要', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'客人说「你来点就好」', energy:'', children:[
+              { id:'n1a1', type:'response', text:'点菜，按人数×1.5道热菜，必有一两道"硬菜"（价格高一些的）', sub:'宁多勿少，剩了不丢人，不够才失礼', energy:'low', children:[
+                { id:'n1a1a', type:'response', text:'点完说「我点了这几个，你们看还要加什么」', sub:'主动权在你，但给对方最后确认的机会', energy:'low', children:[
+                  { id:'n1a1a1', type:'end', text:'点菜完成，等上菜', energy:'low', children:[] }
+                ]}
+              ]}
+            ]}
+          ]
+        },
+        { id:'n2', type:'trigger', text:'快吃完了，该买单了', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'趁上厕所或找借口离席，提前到前台把账结了', sub:'不要当着所有人的面抢着买单，提前结账更有面子', energy:'low',
+              children:[
+                { id:'n2a1', type:'end', text:'回座位，大家还在聊，账已经结完了', energy:'low', children:[] }
+              ]
+            },
+            { id:'n2c', type:'trigger', text:'对方买完单说「下次我请」', energy:'', children:[
+              { id:'n2c1', type:'unclear', text:'这是真的还是客套？', sub:'判断标准：对方有没有主动约时间', energy:'', children:[] },
+              { id:'n2c2', type:'response', text:'「好，说定了，你来约时间。」', sub:'接住承诺，把主动权给对方，等对方跟进', energy:'low', children:[
+                { id:'n2c2a', type:'trigger', text:'两三个月内对方没有动静', energy:'', children:[
+                  { id:'n2c2a1', type:'response', text:'「上次你说要请我，最近要不要约一下？」', sub:'主动跟进完全合理，不显得奇怪', energy:'low', children:[
+                    { id:'n2c2a1a', type:'end', text:'约成了，轮流坐庄的节奏建立', energy:'low', children:[] }
+                  ]}
+                ]},
+                { id:'n2c2b', type:'end', text:'等对方来约，这次不用你主动', energy:'low', children:[] }
+              ]}
+            ]},
+            { id:'n2b', type:'trigger', text:'没来得及提前结，对方去抢着买单', energy:'', children:[              
+              { id:'n2b1', type:'response', text:'「今天是我请，下次换你。」温和坚持，同时自己也走向前台', sub:'两个人同时走，谁先到谁付', energy:'mid', children:[
+                { id:'n2b1a', type:'trigger', text:'对方抢先付了', energy:'', children:[
+                  { id:'n2b1a1', type:'response', text:'「谢谢，下次一定我请。」接受，不再争', sub:'争太多反而尴尬，接受并承诺回请', energy:'low', children:[
+                    { id:'n2b1a1a', type:'end', text:'记住这次，下次主动发起回请', energy:'low', children:[] }
+                  ]}
+                ]}
+              ]}
+            ]}
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's31', title: '请长辈/上级吃饭——座位敬酒', axis: 0, purposes: [0,1],
+    energy: 'high', culture: true, desc: '有等级结构的饭局，座位安排、敬酒顺序、买单方式都有规则。',
+    tree: {
+      id:'n0', type:'trigger', text:'大家进入包房，还没落座', energy:'',
+      children:[
+        { id:'n1', type:'nonverbal', text:'长辈/上级站在入口处，没有主动找座位', sub:'他们在等你引位——这是你作为晚辈/下级的任务', energy:'',
+          children:[
+            { id:'n1a', type:'response', text:'「X，您请坐这里。」引导长辈到正对门口的主位', sub:'正对门口的位置是主位，给最尊贵的人', energy:'low',
+              children:[
+                { id:'n1a1', type:'trigger', text:'长辈推辞「哪里都行，你来坐」', energy:'', children:[
+                  { id:'n1a1a', type:'response', text:'「您是今天的主角，这里就是您的位置。」温和坚持一次', sub:'推辞是礼仪动作，坚持一次长辈通常会接受', energy:'low', children:[
+                    { id:'n1a1a1', type:'end', text:'长辈落座，其他人跟着找位子', energy:'low', children:[] }
+                  ]}
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n2', type:'trigger', text:'茶倒好了，准备第一轮敬酒', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'站起来，端杯，先敬在座最高辈分/级别的人', sub:'说「感谢X今天百忙之中来，我先干为敬」，自己先喝', energy:'mid',
+              children:[
+                { id:'n2a1', type:'trigger', text:'长辈说「坐下坐下，不用这么客气」', energy:'', children:[
+                  { id:'n2a1a', type:'response', text:'「应该的，您随意。」然后喝完坐下', sub:'长辈说随意，不代表真的不需要这个动作，把它做完', energy:'low', children:[
+                    { id:'n2a1a1', type:'end', text:'第一轮敬酒完成，饭局正式开始', energy:'low', children:[] }
+                  ]}
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'trigger', text:'饭局快结束，长辈也要买单', energy:'',
+          children:[
+            { id:'n3a', type:'response', text:'「今天是我请，您能来已经是给我面子了，买单的事不用客气。」然后提前去前台结账', sub:'用「给我面子」这个说法，把买单变成对方给你机会，而不是你在抢', energy:'mid',
+              children:[
+                { id:'n3a1', type:'end', text:'账结完，长辈感到被照顾', energy:'mid', children:[] }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's32', title: '倒茶文化——给人倒茶与被人倒茶', axis: 0, purposes: [0,1,2],
+    energy: 'low', culture: true, desc: '倒茶顺序和叩手礼是中餐厅里最基本的非言语礼仪，做对了无声加分。',
+    tree: {
+      id:'n0', type:'trigger', text:'茶壶在桌上，有人的杯子快空了', energy:'',
+      children:[
+        { id:'n1', type:'nonverbal', text:'发现长辈/上级的杯子茶不多了', sub:'这是你需要主动去做的信号', energy:'',
+          children:[
+            { id:'n1a', type:'response', text:'拿起茶壶，先给长辈添茶，再给其他人，最后给自己', sub:'顺序：长辈/上级→其他客人→主人→自己', energy:'low',
+              children:[
+                { id:'n1a1', type:'nonverbal', text:'倒到八分满停下，不倒满', sub:'规则：八分满，倒满是失礼的', energy:'',
+                  children:[
+                    { id:'n1a1a', type:'end', text:'添茶完成，对方叩手致谢或点头', energy:'low', children:[] }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        { id:'n2', type:'trigger', text:'有人给你倒茶', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'用食指和中指轻叩桌面两下（叩手礼）', sub:'意思是「谢谢」，来自古代叩首礼，现在是通用礼节，不需要开口说话', energy:'low',
+              children:[
+                { id:'n2a1', type:'end', text:'对方收到感谢信号，无需语言，对话不被打断', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'unclear', text:'不确定什么时候该主动去拿茶壶', sub:'原则：只要你是在座相对年轻/级别低的，茶壶空了就是你去拿的信号', energy:'', children:[] }
+      ]
+    }
+  },
+  {
+    id: 's33', title: '长辈夹菜给你', axis: 0, purposes: [0,2],
+    energy: 'low', culture: true, desc: '长辈主动夹菜放到你碗里，不知道该怎么回应，或者那道菜你不能/不想吃。',
+    tree: {
+      id:'n0', type:'nonverbal', text:'长辈用筷子夹了一块菜，放进你的碗里', sub:'这是关心和照顾的信号，不是在问你喜不喜欢', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「谢谢X。」点头，把菜留在碗里', sub:'不需要马上吃，接受这个动作比接受这道菜更重要', energy:'low',
+          children:[
+            { id:'n1a', type:'end', text:'长辈满意，气氛继续', energy:'low', children:[] }
+          ]
+        },
+        { id:'n2', type:'trigger', text:'长辈继续夹，一直夹', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'「够了够了，谢谢X，我自己来。」微笑，用手势示意碗已经够了', sub:'说两次「够了」配合手势，通常有效', energy:'low',
+              children:[
+                { id:'n2a1', type:'end', text:'长辈停下，气氛不受影响', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'trigger', text:'夹的是你过敏或不能吃的东西', energy:'',
+          children:[
+            { id:'n3a', type:'response', text:'「谢谢X，我对这个过敏，您吃，我帮自己夹点别的。」', sub:'说过敏是最有效的理由，不需要解释更多', energy:'low',
+              children:[
+                { id:'n3a1', type:'end', text:'长辈理解，把菜收回去或放到自己碗里', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n4', type:'unclear', text:'不确定长辈夹这道菜是不是有特殊含义（比如「这个补」）', sub:'', energy:'', children:[] }
+      ]
+    }
+  },
+  {
+    id: 's34', title: '作为客人被请吃饭——全程应对', axis: 0, purposes: [0,2],
+    energy: 'mid', culture: true, desc: '被请吃饭，需要处理点菜、被夹菜、道别三个关卡，每个都有隐性规则。',
+    tree: {
+      id:'n0', type:'trigger', text:'主人递来菜单说「你来点，随便点」', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'把菜单传回去说「你来点吧，你更熟悉这里」', sub:'作为客人不主动点菜是默认礼仪', energy:'low',
+          children:[
+            { id:'n1a', type:'trigger', text:'主人坚持「你点一个你喜欢的」', energy:'', children:[
+              { id:'n1a1', type:'response', text:'点一道价格中等、不是菜单最贵的菜，说「这个看起来不错」', sub:'不点最贵的，也不要为了客气一个都不点', energy:'low', children:[
+                { id:'n1a1a', type:'end', text:'点菜完成，主人接手剩余', energy:'low', children:[] }
+              ]}
+            ]}
+          ]
+        },
+        { id:'n2', type:'trigger', text:'吃到一半，主人问「够不够，要不要再加菜？」', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'「够了够了，已经很丰盛了。」', sub:'客人通常说够了，即使没吃饱也先这样说', energy:'low',
+              children:[
+                { id:'n2a1', type:'end', text:'主人满意，继续吃', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'trigger', text:'饭局快结束，主人站起来示意', energy:'',
+          children:[
+            { id:'n3a', type:'response', text:'「今天谢谢你请客，吃得很好。」等主人先走或主人来送你', sub:'不能比主人先离开，等他们示意', energy:'low',
+              children:[
+                { id:'n3a1', type:'trigger', text:'到门口，主人送你出来', energy:'', children:[
+                  { id:'n3a1a', type:'response', text:'「不用送了，你们留步。下次换我请。」', sub:'道别＋回请承诺，完整', energy:'low', children:[
+                    { id:'n3a1a1', type:'end', text:'体面离场，关系维持', energy:'low', children:[] }
+                  ]}
+                ]}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's35', title: '送礼——给出礼物的全流程', axis: 0, purposes: [0,1],
+    energy: 'mid', culture: true, desc: '送礼时对方说「不用不用」，不知道要不要坚持、坚持几次、怎么放下。',
+    tree: {
+      id:'n0', type:'trigger', text:'你带着礼物拜访，递给对方', energy:'',
+      children:[
+        { id:'n1', type:'trigger', text:'对方说「哎呀你来就来，还带什么东西！」', energy:'',
+          children:[
+            { id:'n1a', type:'response', text:'「就是一点心意，不成敬意，您收着。」继续把礼物递过去', sub:'第一次坚持，温和但不退让', energy:'low',
+              children:[
+                { id:'n1a1', type:'trigger', text:'对方还是推辞「真的不用」', energy:'', children:[
+                  { id:'n1a1a', type:'response', text:'「带都带来了，您就收着吧，我才放心。」', sub:'第二次坚持，用「我才放心」把主动权给对方', energy:'low', children:[
+                    { id:'n1a1a1', type:'trigger', text:'对方第三次推辞', energy:'', children:[
+                      { id:'n1a1a1a', type:'response', text:'把礼物放在桌上或门口，说「就放这里了，您随意」', sub:'第三次不再说，直接放下，不争', energy:'low', children:[
+                        { id:'n1a1a1a1', type:'end', text:'礼物交出，关系无损', energy:'low', children:[] }
+                      ]}
+                    ]},
+                    { id:'n1a1a1b', type:'trigger', text:'对方接受了', energy:'', children:[
+                      { id:'n1a1a1b1', type:'end', text:'礼物交接完成，进入正常拜访', energy:'low', children:[] }
+                    ]}
+                  ]}
+                ]},
+                { id:'n1a2', type:'trigger', text:'对方接受了', energy:'', children:[
+                  { id:'n1a2a', type:'end', text:'礼物交接完成，不需要再提', energy:'low', children:[] }
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n2', type:'unclear', text:'不确定对方的推辞是真的不想要还是礼仪性动作', sub:'原则：推辞1-2次之后接受 = 礼仪性推辞；推辞超过3次且态度明确 = 可能真的不方便收', energy:'', children:[] }
+      ]
+    }
+  },
+  {
+    id: 's36', title: '收礼——接到礼物的全流程', axis: 0, purposes: [0,2],
+    energy: 'low', culture: true, desc: '有人送来礼物，不知道要不要当场打开、怎么道谢才不显得敷衍、后续要不要回礼。',
+    tree: {
+      id:'n0', type:'trigger', text:'对方送来礼物', energy:'',
+      children:[
+        { id:'n1', type:'response', text:'「哎，你还带东西来，太客气了。谢谢你特意带来。」', sub:'说具体——「特意带来」比「谢谢」有分量', energy:'low',
+          children:[
+            { id:'n1a', type:'unclear', text:'要不要当场打开？', sub:'', energy:'', children:[] },
+            { id:'n1b', type:'response', text:'【长辈送的/正式场合】不当场打开，放在一边说「我等会慢慢看」', sub:'正式场合不当面打开，避免当场评价礼物', energy:'low',
+              children:[
+                { id:'n1b1', type:'end', text:'礼物收下，之后发消息告知用了/收到', energy:'low', children:[] }
+              ]
+            },
+            { id:'n1c', type:'response', text:'【朋友送的/对方期待你打开】当场打开，表情真实偏正面', sub:'不过度夸张（「天哪太贵了」反而让对方不舒服），说一句具体的「这个颜色很好看」', energy:'low',
+              children:[
+                { id:'n1c1', type:'end', text:'对方感到心意被接收', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n2', type:'trigger', text:'之后用到了那件礼物', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'发一条消息「那个XX我用了，很好用，谢谢你当时带来」', sub:'后续反馈在中国人际关系里很重要，比当场谢谢更有价值', energy:'low',
+              children:[
+                { id:'n2a1', type:'end', text:'对方感到被记得，关系加分', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'trigger', text:'考虑要不要回礼', energy:'',
+          children:[
+            { id:'n3a', type:'response', text:'在下一个合适节点回礼（对方生日/节日/你去拜访时）', sub:'价值大约相当或略高一点，不要差太多也不要贵太多', energy:'low',
+              children:[
+                { id:'n3a1', type:'end', text:'礼尚往来，关系维持平衡', energy:'low', children:[] }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 's37', title: '饭桌上不知道该说话还是安静', axis: 1, purposes: [0,1,2],
+    energy: 'mid', culture: true, desc: '多人饭局，不确定什么时候该开口、什么时候跟随就好、被问到时怎么处理。',
+    tree: {
+      id:'n0', type:'trigger', text:'饭局进行中，有人在说话，你不确定自己该做什么', energy:'',
+      children:[
+        { id:'n1', type:'nonverbal', text:'大家都在专注听一个人说话', sub:'这是安静跟随的时机', energy:'',
+          children:[
+            { id:'n1a', type:'response', text:'偶尔点头，表情配合，不主动打断', sub:'守纪律的人给人留下好印象', energy:'low',
+              children:[
+                { id:'n1a1', type:'end', text:'安静在场，完全合法', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n2', type:'nonverbal', text:'长辈/主人举杯示意敬酒', sub:'这是你需要跟着做的信号', energy:'',
+          children:[
+            { id:'n2a', type:'response', text:'立刻端杯，跟着举起来', sub:'别人端杯你端杯，不要落后', energy:'low',
+              children:[
+                { id:'n2a1', type:'end', text:'跟随完成，无需说话', energy:'low', children:[] }
+              ]
+            }
+          ]
+        },
+        { id:'n3', type:'trigger', text:'有人在聊你不了解的话题，全桌都在谈', energy:'',
+          children:[
+            { id:'n3a', type:'response', text:'安静在场，偶尔点头，不假装懂', sub:'「我不太了解这个，你们继续」完全可以接受', energy:'low',
+              children:[
+                { id:'n3a1', type:'trigger', text:'有人问「你觉得呢？」', energy:'', children:[
+                  { id:'n3a1a', type:'response', text:'「这个我不太懂，你们说，我在学习。」', sub:'真实且得体，不需要硬撑', energy:'low', children:[
+                    { id:'n3a1a1', type:'end', text:'话题回到懂的人，你退回安全位置', energy:'low', children:[] }
+                  ]},
+                  { id:'n3a1b', type:'response', text:'把话题转向食物：「这道菜真的很好吃，我先干为敬。」', sub:'转移话题同时参与了饭局，不需要对原话题表态', energy:'low', children:[
+                    { id:'n3a1b1', type:'end', text:'话题自然转移，你参与了一次', energy:'low', children:[] }
+                  ]}
+                ]}
+              ]
+            }
+          ]
+        },
+        { id:'n4', type:'trigger', text:'沉默持续超过几秒，没有人说话', energy:'',
+          children:[
+            { id:'n4a', type:'response', text:'给旁边的人倒茶或添水', sub:'占位动作，填补沉默，不需要说话', energy:'low',
+              children:[
+                { id:'n4a1', type:'end', text:'动作完成，沉默被填补，对方点头致谢', energy:'low', children:[] }
+              ]
+            },
+            { id:'n4b', type:'response', text:'说一句评菜：「这个X真的很好，是招牌吗？」', sub:'评菜是饭桌上最安全的主动发言', energy:'low',
+              children:[
+                { id:'n4b1', type:'end', text:'话题启动，主人或其他人会接话', energy:'low', children:[] }
+              ]
+            }
           ]
         }
       ]
@@ -1510,12 +2186,22 @@ let state = {
   axisFilter: 'all',
   purposeFilters: [],
   energyFilter: 'all',
+  cultureFilter: false,
   expandedNodes: {},
   verifiedPaths: {},
   activeVariants: {},
   addNodeParentId: null,
   addNodeSceneId: null,
 };
+
+const DEFAULT_CULTURE_RULES = [
+  { id: 'cr1', cat: 'culture', text: '湿毛巾：饭前上的擦手，不能擦脸/嘴/汗。饭后上的才是擦嘴用的。' },
+  { id: 'cr2', cat: 'culture', text: '筷子禁忌：不能竖插在饭碗中（祭奠用法）；不用筷子指人；不要在菜里翻来翻去。' },
+  { id: 'cr3', cat: 'culture', text: '手机礼仪：饭局中接电话要起身走出去；重要饭局把手机翻过来放或调静音。' },
+  { id: 'cr4', cat: 'culture', text: '牙签礼仪：用牙签剔牙时要用手或餐巾掩住嘴，不要大剌剌地当众剔。' },
+  { id: 'cr5', cat: 'culture', text: '转盘礼仪：新菜从主宾开始顺时针取；转动前确认没有人正在夹菜；转速要慢。' },
+  { id: 'cr6', cat: 'culture', text: '点茶：不确定时说「铁观音吧」或「你们这里什么好」是安全答案。正式饭局常见：铁观音/大红袍/普洱。' },
+];
 
 function loadState() {
   try {
@@ -1530,6 +2216,7 @@ function loadState() {
       state.scenes = [...DEFAULT_SCENES, ...savedCustom];
     } else {
       state.scenes = [...DEFAULT_SCENES];
+      state.rules = [...DEFAULT_CULTURE_RULES];
     }
   } catch(e) {
     state.scenes = [...DEFAULT_SCENES];
@@ -1587,22 +2274,32 @@ function togglePurposeFilter(idx, el) {
 
 function setEnergyFilter(val, btn) {
   state.energyFilter = val;
-  document.querySelectorAll('.filter-panel .filter-btn').forEach(b => {
-    if (['全部','低耗能','中等','高耗能'].some(l => b.textContent === l)) {
-      b.classList.remove('active');
-    }
+  document.querySelectorAll('#energy-filter-section .filter-btn').forEach(b => {
+    b.classList.remove('active');
   });
   btn.classList.add('active');
   renderSceneGrid();
 }
 
 function filterScenes() {
+  const query = (document.getElementById('scene-search')?.value || '').trim().toLowerCase();
   return state.scenes.filter(s => {
     if (state.axisFilter !== 'all' && s.axis !== state.axisFilter) return false;
     if (state.purposeFilters.length > 0 && !state.purposeFilters.some(p => s.purposes.includes(p))) return false;
     if (state.energyFilter !== 'all' && s.energy !== state.energyFilter) return false;
+    if (state.cultureFilter && !s.culture) return false;
+    if (query && !s.title.toLowerCase().includes(query) && !s.desc.toLowerCase().includes(query)) return false;
     return true;
   });
+}
+
+function setCultureFilter(val, btn) {
+  state.cultureFilter = val;
+  document.querySelectorAll('#culture-filter-section .filter-btn').forEach(b => {
+    b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderSceneGrid();
 }
 
 // ══════════════════════════════════════════════
@@ -1623,11 +2320,12 @@ function renderSceneGrid() {
     const axisTag = `<span class="tag tag-axis">${AXIS_LABELS[s.axis]}</span>`;
     const logCount = state.logs.filter(l => l.sceneId === s.id).length;
     const logBadge = logCount > 0 ? `<span class="tag" style="background:var(--bg2);color:var(--text3);">记录 ${logCount} 次</span>` : '';
+    const cultureBadge = s.culture ? `<span class="tag" style="background:#EEF3F0;color:#2D6B52;">🏮 文化规则</span>` : '';
     return `
       <div class="scene-card ${AXIS_CLASS[s.axis]}" onclick="openScene('${s.id}')">
         <div class="scene-card-title">${s.title}</div>
         <div class="scene-card-desc">${s.desc}</div>
-        <div class="scene-card-tags">${axisTag}${energyTag}${tags}${logBadge}</div>
+        <div class="scene-card-tags">${axisTag}${energyTag}${tags}${cultureBadge}${logBadge}</div>
       </div>`;
   }).join('');
 }
@@ -1710,7 +2408,10 @@ function buildNodeEl(node, sceneId, parentId) {
     inner += `<div class="node-energy ne-${node.energy}">${sym[node.energy]}</div>`;
   }
   nodeEl.innerHTML = inner;
-  nodeEl.onclick = (e) => { if (node.type === 'unclear') handleNodeClick(node, sceneId); };
+  nodeEl.onclick = (e) => {
+    if (node.type === 'unclear') { handleNodeClick(node, sceneId); return; }
+    highlightPath(node.id, sceneId);
+  };
   wrap.appendChild(nodeEl);
 
   if (node.type === 'unclear') {
@@ -2009,11 +2710,11 @@ function deleteLog(id) {
 // ══════════════════════════════════════════════
 const CAT_LABELS = {
   subtext:'潜台词识别', turn:'轮转信号', exit:'退出方式',
-  clarify:'澄清话术', recover:'事后恢复', other:'其他'
+  clarify:'澄清话术', recover:'事后恢复', culture:'文化规则', other:'其他'
 };
 const CAT_COLORS = {
   subtext:'var(--purple)', turn:'var(--accent)', exit:'var(--teal)',
-  clarify:'var(--amber)', recover:'var(--coral)', other:'var(--text3)'
+  clarify:'var(--amber)', recover:'var(--coral)', culture:'#2D6B52', other:'var(--text3)'
 };
 
 function addRule() {
@@ -2053,6 +2754,139 @@ function renderRules() {
     });
   }
   list.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════
+// PATH HIGHLIGHT
+// ══════════════════════════════════════════════
+function highlightPath(targetId, sceneId) {
+  // Clear existing highlights
+  document.querySelectorAll('.tree-node.path-active').forEach(el => el.classList.remove('path-active'));
+
+  const scene = state.scenes.find(s => s.id === sceneId);
+  if (!scene) return;
+
+  // Find path from root to targetId
+  const path = [];
+  function findPath(node, target, currentPath) {
+    const newPath = [...currentPath, node.id];
+    if (node.id === target) { path.push(...newPath); return true; }
+    if (node.children) {
+      for (const c of node.children) {
+        if (findPath(c, target, newPath)) return true;
+      }
+    }
+    return false;
+  }
+  findPath(scene.tree, targetId, []);
+
+  // Highlight all nodes in path
+  path.forEach(id => {
+    const wrap = document.getElementById('wrap-' + id);
+    if (wrap) {
+      const nodeEl = wrap.querySelector('.tree-node');
+      if (nodeEl) nodeEl.classList.add('path-active');
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
+// AI CHAT
+// ══════════════════════════════════════════════
+let chatHistory = [];
+
+function openChatModal() {
+  const scene = state.scenes.find(s => s.id === state.currentSceneId);
+  if (!scene) return;
+  document.getElementById('chat-scene-name').textContent = scene.title;
+  document.getElementById('chat-hint').textContent =
+    `场景：${scene.desc} — Claude 会扮演「对方」，你来练习回应。`;
+  if (chatHistory.length === 0) initChat(scene);
+  document.getElementById('modal-chat').classList.add('open');
+  setTimeout(() => document.getElementById('chat-input').focus(), 100);
+}
+
+function closeChatModal() {
+  document.getElementById('modal-chat').classList.remove('open');
+}
+
+function resetChat() {
+  chatHistory = [];
+  document.getElementById('chat-messages').innerHTML = '';
+  const scene = state.scenes.find(s => s.id === state.currentSceneId);
+  if (scene) initChat(scene);
+}
+
+function initChat(scene) {
+  chatHistory = [];
+  // Extract trigger text from root node as opening line
+  const openingText = scene.tree.text;
+  addBubble('them', openingText);
+  chatHistory.push({ role: 'assistant', content: openingText });
+}
+
+function addBubble(who, text) {
+  const container = document.getElementById('chat-messages');
+  const bubble = document.createElement('div');
+  bubble.className = `chat-bubble ${who}`;
+  bubble.textContent = text;
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+  return bubble;
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChatMessage();
+  }
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const sendBtn = document.getElementById('chat-send-btn');
+  input.value = '';
+  sendBtn.disabled = true;
+
+  const scene = state.scenes.find(s => s.id === state.currentSceneId);
+  addBubble('me', text);
+  chatHistory.push({ role: 'user', content: text });
+
+  const thinkingBubble = addBubble('thinking', '对方正在想…');
+
+  // Build system prompt
+  const systemPrompt = `你正在扮演一个真实的人，参与一段社交对话练习。场景是：「${scene.title}」。
+背景：${scene.desc}
+你的角色是对方（不是AI）。用自然的中文口语回应，1-3句话，符合场景的语气（${scene.axis <= 1 ? '熟人之间' : '不太熟的人之间'}）。
+不要解释你在做什么，不要用括号描述动作，直接说话。如果对话自然结束，用一句简短的结束语收尾。`;
+
+  try {
+    const response = await fetch('https://bold-waterfall-1125.liangbeina.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: chatHistory,
+      })
+    });
+
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || '…';
+    thinkingBubble.remove();
+    addBubble('them', reply);
+    chatHistory.push({ role: 'assistant', content: reply });
+  } catch (err) {
+    thinkingBubble.remove();
+    addBubble('thinking', '网络错误，请重试。');
+  }
+
+  sendBtn.disabled = false;
+  input.focus();
 }
 
 // ══════════════════════════════════════════════
